@@ -1,0 +1,11 @@
+
+ tid_8900_time_14:0:51:614 DPETW@ "deep_gaze_et lib v1.0.1  released at Mar 30 2024 08:54:47"
+ tid_8900_time_14:0:51:614 DPETW@ "GetJsonInfo start"
+ tid_8900_time_14:0:51:615 DPETW@ "Save logs = 1"
+ tid_8900_time_14:0:51:615 DPETW@ "Save imgss = 0"
+ tid_8900_time_14:0:51:615 DPETW@ "json read success!"
+ tid_8900_time_14:0:51:705 DPETW@ "Open camera failed! ErrorCode[-101]\n"
+ tid_8900_time_14:0:51:706 DPETW@ "Open camera failed! ErrorCode[-101]\n"
+ tid_8900_time_14:0:51:706 DPETW@ "Start load camera configuration to the configL.mvcfg\n"
+ tid_8900_time_14:0:51:706 DPETW@ "Load camera configuration fail! ErrorCode[-101]\n"
+ tid_8900_time_14:0:51:706 DPETW@ "CamFeatureExtractor init failed"

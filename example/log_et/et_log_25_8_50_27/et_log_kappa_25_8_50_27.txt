@@ -1,0 +1,12 @@
+
+ tid_21948_time_16:50:27:189 DPETW@ "deep_gaze_et lib v1.0.1  released at Mar 30 2024 08:54:47"
+ tid_21948_time_16:50:27:189 DPETW@ "GetJsonInfo start"
+ tid_21948_time_16:50:27:189 DPETW@ "Save logs = 1"
+ tid_21948_time_16:50:27:189 DPETW@ "Save imgss = 0"
+ tid_21948_time_16:50:27:189 DPETW@ "json read success!"
+ tid_21948_time_16:50:27:521 DPETW@ "Start load camera configuration to the configL.mvcfg\n"
+ tid_21948_time_16:50:28:134 DPETW@ "CamFeatureExtractor init"
+ tid_21948_time_16:50:28:134 DPETW@ "CamFeatureExtractor Start"
+ tid_21948_time_16:50:28:134 DPETW@ "gazeInit"
+ tid_21948_time_16:50:55:989 DPETW@ "GAZE_LOG_CALI: 0.859211     -6.638485      7.633800      -16.896221      -17.881954      149.093231 "
+ tid_21948_time_16:52:37:954 DPETW@ "GazeManager Release"
