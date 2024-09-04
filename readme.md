@@ -33,11 +33,12 @@ Pupilio is a lightweight Python package developed by Hangzhou Shenning Technolog
 
 ## Installation
 
-Pupilio requires Python 3.8 or higher. You can install it using pip:
+Currently, all eye trackers shipped with Pupilio are pre-configured with the necessary Pupilio Python packages. If we need to upgrade this package, please enter the following command in the command prompt or PowerShell window:
 
 ```bash
 pip install pupilio
 ```
+
 
 ## Quick Start
 Here is a simple example to get started with Pupilio:
@@ -103,7 +104,7 @@ If you encounter any issues or have questions, please open an issue on GitHub or
 
 ## License
 
-Pupilio is a proprietary software developed by Hangzhou Shenning Technology Co., Ltd. All rights reserved. Unauthorized use, distribution, or modification is prohibited without explicit permission. For licensing inquiries, please contact [support@deep-gaze.com](mailto:support@deep-gaze.com).
+Pupilio is a proprietary software developed by Hangzhou Shenning Technology Co., Ltd. All rights reserved. Unauthorized use, distribution, or modification is prohibited without explicit permission. For licensing inquiries, please contact [zhugc2016@gmail.com](mailto:zhugc2016@gmail.com).
 
 ## Acknowledgments
 Pupilio is developed and maintained by Hangzhou Shenning Technology Co., Ltd. Special thanks to the community for their valuable feedback and support.

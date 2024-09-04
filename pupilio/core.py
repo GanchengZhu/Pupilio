@@ -6,7 +6,7 @@ import platform
 import shutil
 import threading
 from datetime import datetime
-from typing import Callable, List, Tuple
+from typing import Callable, Tuple
 
 import numpy as np
 
@@ -37,7 +37,7 @@ class Pupilio:
 
     def __init__(self):
         """
-        Initialize the DeepGaze class.
+        Initialize the Pupilio class.
         Load the appropriate DLL based on the platform (Windows or other).
         Set return types and argument types for DLL functions.
         Initialize various attributes and start the sampling thread.
@@ -79,8 +79,9 @@ class Pupilio:
         # Attributes for handling sampling and locking
         # Mutex lock for managing subscribers
         self._sample_subscriber_lock = threading.Lock()
-        self._sample_subscribers: List[Callable] = []  # List to store subscriber functions
-        self._sample_subscribers.append(self._write_sample)
+        self._sample_subscribers = []  # List to store subscriber functions
+        with self._sample_subscriber_lock:
+            self._sample_subscribers.append((self._write_sample, [], {}))
         # Thread for sampling eye gaze
         self._sample_thread = None
         self._tmpSampleDataSteam = None
@@ -93,9 +94,9 @@ class Pupilio:
         # Name for the current session
         self._session_name = None
 
-        # Initialize DeepGaze, raise an exception if initialization fails
+        # Initialize Pupilio, raise an exception if initialization fails
         if self._et_native_lib.deep_gaze_init() != ET_ReturnCode.ET_SUCCESS.value:
-            raise Exception("DeepGaze init failed, please contact the developer!")
+            raise Exception("Pupilio init failed, please contact the developer!")
 
         self._face_pos = np.zeros(3, dtype=np.float32)
         self._pt = np.zeros(11, dtype=np.float32)
@@ -124,7 +125,8 @@ class Pupilio:
         self._session_name = session_name
 
         self._online_event_detection = OnlineEventDetection()
-        self._sample_subscribers.append(self._online_event_detection.handle_sample)
+        with self._sample_subscriber_lock:
+            self._sample_subscribers.append((self._online_event_detection.handle_sample, [], {}))
 
         # Thread for sampling eye gaze
         if not self._sample_thread:
@@ -378,9 +380,9 @@ class Pupilio:
         else:
             CalibrationUI(pupil_io=self).draw_hands_free(validate=validate, bg_color=bg_color)
 
-    def subscribe_sample(self, *subscribers):
+    def subscribe_sample(self, subscriber_func: Callable, args=(), kwargs=None):
         """
-        Subscribe a function to receive eye tracking sample.
+        Subscribe a function to receive eye tracking samples.
 
             'sample' is an instance of dict. The format is as follows:
 
@@ -424,35 +426,49 @@ class Pupilio:
                 right_eye_sample[13]:right eye valid (0:invalid 1:valid)
 
         Args:
-            *args (Callable): Functions to be unsubscribed.
+            subscriber_func (Callable): The function to be called when a new eye tracking sample is available.
+            args (tuple): Optional positional arguments to pass to the subscriber function.
+            kwargs (dict): Optional keyword arguments to pass to the subscriber function.
 
         Raises:
-            Exception: If any of the args are not Callable.
+            Exception: If `subscriber_func` is not Callable.
+        """
+        if kwargs is None:
+            kwargs = {}
+
+        with self._sample_subscriber_lock:
+            if not isinstance(subscriber_func, Callable):
+                raise Exception("Subscriber must be Callable")
+
+            # Append the function, args, and kwargs to the subscribers list
+            self._sample_subscribers.append((subscriber_func, args, kwargs))
+
+    def unsubscribe_sample(self, subscriber_func: Callable, args=(), kwargs=None):
+        """
+        Unsubscribe a function from receiving eye tracking samples.
 
         Args:
-            *args (Callable): Functions to be called when new eye tracking sample is available.
+            subscriber_func (Callable): The function to be removed from subscribers.
+            args (tuple): Positional arguments used for subscription (should match what was used during subscription).
+            kwargs (dict): Keyword arguments used for subscription (should match what was used during subscription).
 
         Raises:
-            Exception: If any of the args are not Callable.
+            Exception: If `subscriber_func` is not Callable.
         """
-        with self._sample_subscriber_lock:
-            for call in subscribers:
-                if isinstance(call, Callable):
-                    self._sample_subscribers.append(call)
-                else:
-                    raise Exception("Subscriber's args must be Callable")
+        if kwargs is None:
+            kwargs = {}
 
-    def unsubscribe_sample(self, *subscribers):
-        """
-        Unsubscribe functions from receiving eye tracking sample.
-        """
         with self._sample_subscriber_lock:
-            for call in subscribers:
-                if isinstance(call, Callable):
-                    if call in self._sample_subscribers:
-                        self._sample_subscribers.remove(call)
-                else:
-                    raise Exception("Subscriber's args must be Callable")
+            if not isinstance(subscriber_func, Callable):
+                raise Exception("Subscriber must be Callable")
+
+            # Create a tuple with the subscriber function, args, and kwargs for comparison
+            subscriber_tuple = (subscriber_func, args, kwargs)
+
+            if subscriber_tuple in self._sample_subscribers:
+                self._sample_subscribers.remove(subscriber_tuple)
+            else:
+                raise Exception("Subscriber not found")
 
     def subscribe_event(self, *args):
         """
@@ -475,7 +491,7 @@ class Pupilio:
 
     def clear_cache(self) -> int:
         """Clear the cache."""
-        self._workSpace = pathlib.Path.home().joinpath("DeepGaze")
+        self._workSpace = pathlib.Path.home().joinpath("Pupilio")
         if not self._workSpace.exists():
             shutil.rmtree(self._workSpace)
         return ET_ReturnCode.ET_SUCCESS.value
@@ -495,7 +511,7 @@ class SampleThread(threading.Thread):
         Initialize the SampleThread.
 
         Args:
-            pupil_io (Pupilio): An instance of DeepGaze class.
+            pupil_io (Pupilio): An instance of Pupilio class.
         """
         threading.Thread.__init__(self)
         self._running = True  # Flag to indicate if the thread should keep running
@@ -527,8 +543,9 @@ class SampleThread(threading.Thread):
                             # Notify all subscribers with the data
                             _sample = self._sample_cache.dequeue()
                             with self._pupil_io.sample_subscriber_lock:
-                                for subscriber in self._pupil_io.sample_subscribers:
-                                    subscriber(_sample)
+                                for subscriber, args, kwargs in self._pupil_io.sample_subscribers:
+                                    # subscriber(_sample)
+                                    subscriber(_sample, *args, **kwargs)
 
                         # Prepare data dictionary
                         _new_sample = {
@@ -551,7 +568,7 @@ class SampleThread(threading.Thread):
                     _sample = self._sample_cache.dequeue()
                     with self._pupil_io.sample_subscriber_lock:
                         for subscriber in self._pupil_io.sample_subscribers:
-                            subscriber(_sample)
+                            subscriber(_sample, *args, **kwargs)
                 except Exception as e:
                     # Handle any exceptions that might occur during estimation
                     logging.exception("sample callback function error: {}".format(e))

@@ -3,7 +3,6 @@ import shutil
 
 from setuptools import setup, find_packages
 from setuptools.command.build_ext import build_ext
-
 package_name = 'pupilio'
 
 

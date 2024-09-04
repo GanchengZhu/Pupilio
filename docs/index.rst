@@ -22,3 +22,25 @@ Welcome to the Pupilio Documentation!
    start/quick_start
    start/demo
 
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Modules
+
+   modules
+
+.. toctree::
+   :maxdepth: 1
+   :caption: C++ API
+   :name: c_plus_plus_api
+
+   c_plus_plus_api
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: FAQ
+   :name: faq
+
+   faq
+
