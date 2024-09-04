@@ -11,11 +11,12 @@ pip install pupilio
 Once Pupilio is installed, enter the following command in the command prompt or PowerShell window:
 ```bash
 python
+
 >>> import pupilio 
 ```
 If we see a window displaying pupilio version: ***, the installation was successful.
 
-## Starting eye tracking
+## Starting Eye Tracking
 
 Our calibration user interface supports both Pygame and PsychoPy, which means we need to initialize a window and pass it to the Pupilio instance. For simplicity and convenience, let's start with Pygame:
 
