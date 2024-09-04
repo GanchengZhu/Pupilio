@@ -1,6 +1,6 @@
-# Quick Start
+# Quick-Start
 
-## Install Pupilo 
+## Install Pupilio 
 
 Currently, all eye trackers shipped with Pupilio are pre-configured with the necessary Pupilio Python packages. If we need to upgrade this package, please enter the following command in the command prompt or PowerShell window:
 
@@ -63,19 +63,18 @@ Assuming we have collected data for 20 seconds, we can save the collected data t
 
 ```Python
 
-# hanging the main thread for 20 seconds
+# hang the main thread for 5 seconds by game
 # eye tracking sampling are running on the background thread
-import time
-time.sleep(20)
+pygame.time.wait(5 * 1000)
 
 # stop eye tracking sampling
 pupil_io.stop_sampling()
 
 # sleep for 100 ms to capture ending samples
-time.sleep(0.1)
+pygame.time.wait(100)
 
 # save eye movement data
-pupil_io.save_data("eye_movement.data")
+pupil_io.save_data("eye_movement.csv")
 ```
 
 Finally, we need to clean up the resources used by Pupilio and close Pygame. Here's how we can do it:
@@ -94,4 +93,4 @@ pygame.quit()
 
 Here is a flowchart illustrating the general workflow of Pupilio:
 
-<img style="width:30%;" src="../_static/images/start/quick_start/workflow.png" />
+![Workflow](../_static/images/start/quick_start/workflow.png)

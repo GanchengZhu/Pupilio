@@ -19,16 +19,16 @@ from .misc import ET_ReturnCode, LocalConfig, Calculator
 
 
 class CalibrationUI(object):
-    def __init__(self, deep_gaze):
+    def __init__(self, pupil_io):
 
         # set deep gaze
-        self._deep_gaze = deep_gaze
+        self._pupil_io = pupil_io
 
         # set pygame window caption
         # pygame.display.set_caption('deep gaze calibration')
 
         # set pygame window icon
-        # _icon_path = os.path.join(self._current_dir, "asset", "deep_gaze_favicon.png")
+        # _icon_path = os.path.join(self._current_dir, "asset", "pupil_io_favicon.png")
         # _icon = pygame.image.load(_icon_path)
         # pygame.display.set_icon(_icon)
 
@@ -334,8 +334,8 @@ class CalibrationUI(object):
                     if __time_elapsed > 3:
                         self._phase_validation = False
 
-                _calibrationDir = (self._deep_gaze._workSpace.joinpath("calibration")
-                                   .joinpath(self._deep_gaze._session_name))
+                _calibrationDir = (self._pupil_io._workSpace.joinpath("calibration")
+                                   .joinpath(self._pupil_io._session_name))
                 if not _calibrationDir.exists():
                     _calibrationDir.mkdir(parents=True)
 
@@ -406,12 +406,12 @@ class CalibrationUI(object):
 
             else:
                 _point = self._validation_points[self._calibration_drawing_list[-1]]
-                _status, _left_sample, _right_sample, _timestamp, _marker = self._deep_gaze.estimation_lr()
+                _status, _left_sample, _right_sample, _timestamp, _marker = self._pupil_io.estimation_lr()
 
                 self._draw_animation(point=_point, time_elapsed=_time_elapsed)
 
                 if 0.0 < _time_elapsed <= 1.5:
-                    # face_status, face_position = self._deep_gaze.face_position()
+                    # face_status, face_position = self._pupil_io.face_position()
                     _left_sample = _left_sample.tolist()
                     _right_sample = _right_sample.tolist()
                     _left_gaze_point = [_left_sample[0], _left_sample[1]]
@@ -451,7 +451,7 @@ class CalibrationUI(object):
 
         _time_elapsed = time.time() - self._calibration_timer
 
-        _status = self._deep_gaze.calibration(self._calibration_point_index)
+        _status = self._pupil_io.calibration(self._calibration_point_index)
         if _status == ET_ReturnCode.ET_CALI_CONTINUE.value:
             pass
         elif _status == ET_ReturnCode.ET_CALI_NEXT_POINT.value:
@@ -493,7 +493,7 @@ class CalibrationUI(object):
         _color = [255, 255, 255]
         _eyebrow_center_point = [-1, -1]
         _start_time = time.time()
-        _status, _face_position = self._deep_gaze.face_position()
+        _status, _face_position = self._pupil_io.face_position()
         _face_position = _face_position.tolist()
         logging.info(f'Get face position cost {(time.time() - _start_time):.4f} seconds.')
         logging.info(f'Face position: {str(_face_position)}')
@@ -713,14 +713,3 @@ class CalibrationUI(object):
         self._sound.stop()
 
 
-if __name__ == '__main__':
-    from core import DeepGaze
-
-    dp = DeepGaze()
-    dp.create_session(session_name="test")
-    cali_ui = CalibrationUI(deep_gaze=dp)
-    cali_ui.draw(validate=True)
-    # while 1:
-    #     cali_ui._screen.fill((255, 255, 255))  # Fill white color
-    #     cali_ui.draw_legend()
-    #     pygame.display.flip()

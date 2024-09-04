@@ -128,10 +128,10 @@ class Pupilio:
 
         # Thread for sampling eye gaze
         if not self._sample_thread:
-            self._sample_thread = SampleThread(deep_gaze=self)
+            self._sample_thread = SampleThread(pupil_io=self)
         else:
             self._sample_thread.running = False
-            self._sample_thread = SampleThread(deep_gaze=self)
+            self._sample_thread = SampleThread(pupil_io=self)
         self._sample_thread.start()  # Start the sampling thread
 
         self._workSpace = pathlib.Path.home().joinpath("Pupilio")
@@ -374,9 +374,9 @@ class Pupilio:
             hands_free (bool): Whether to hands free
         """
         if not hands_free:
-            CalibrationUI(deep_gaze=self).draw(validate=validate, bg_color=bg_color)
+            CalibrationUI(pupil_io=self).draw(validate=validate, bg_color=bg_color)
         else:
-            CalibrationUI(deep_gaze=self).draw_hands_free(validate=validate, bg_color=bg_color)
+            CalibrationUI(pupil_io=self).draw_hands_free(validate=validate, bg_color=bg_color)
 
     def subscribe_sample(self, *subscribers):
         """

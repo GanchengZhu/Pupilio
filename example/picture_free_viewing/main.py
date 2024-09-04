@@ -1,21 +1,3 @@
-# Demonstration
-
-## Picture Free-viewing Task
-
-In the previous section, we gained a preliminary understanding of the basic workflow of Pupilio. Now, we can implement a simple picture free-view task. This demonstration will guide you through the main usage of Pupilio.
-
-Firstly, please prepare two image files as experimental materials. 
-
-- lenna.png
-![lenna](../_static/images/start/demo/lenna.png)
-
-- lenna_gray.png
-![lenna_gray](../_static/images/start/demo/lenna_gray.png)
-
-Then, a following pythonic script will display the eye tracking calibration, validation, and image stimuli in order.  
-Most notably, this script demonstrates how to use the `pupil_io.subscribe_sample` method to subscribe to each frame of eye-tracking data and the `pupil_io.send_trigger` method to mark the onset of experimental stimuli. These functions are similar to markers in EEG signals, enabling precise recording of the timing of experimental events.
-
-```python
 #!/usr/bin/env python
 
 # Copyright (c) 2024, Hangzhou Deep Gaze Sci & Tech Ltd
@@ -191,4 +173,3 @@ pupil_io.release()
 
 # quit pygame
 pygame.quit()
-```

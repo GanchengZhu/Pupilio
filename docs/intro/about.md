@@ -1,6 +1,6 @@
 # Introduction of Pupilio
 
-Pupilio is a lightweight Python package developed by Hangzhou Shennin Technology Co., Ltd. It is designed to drive and control the Pupil.IO Eye Tracker, offering a straightforward and user-friendly interface for ease of use. This tool allows for the control of eye-tracking data recording, calibration, and validation. Its calibration and validation UI can be seamlessly integrated with PsychoPy, PyGame, and other platforms.
+Pupilio is a lightweight Python package developed by Hangzhou Shenning Technology Co., Ltd. It is designed to drive and control the Pupil.IO Eye Tracker, offering a straightforward and user-friendly interface for ease of use. This tool allows for the control of eye-tracking data recording, calibration, and validation. Its calibration and validation UI can be seamlessly integrated with PsychoPy, PyGame, and other platforms.
 
 
 ## What's Pupil.IO
