@@ -7,3 +7,4 @@ token
 .idea
 build.md
 docs/build
+pupilio/__pycache__
