@@ -1,25 +1,25 @@
 import asyncio
 import json
 import websockets
-from .core import DeepGaze
+from .core import Pupilio
 from .web_socket_server import WebSocketServer
 
 
 class SampleBroadcastServer(WebSocketServer):
-    def __init__(self, host: str, port: int, deep_gaze: DeepGaze):
+    def __init__(self, host: str, port: int, pupil_io: Pupilio):
         """
         Initialize the Sample Broadcast Server.
 
         Args:
             host: Host address to run the server on.
             port: Port number to run the server on.
-            deep_gaze: An instance of DeepGaze class for data simulation.
+            pupil_io: An instance of DeepGaze class for data simulation.
         """
         super().__init__(host, port)
         self.host = host
         self.port = port
         self.connected_client_pool = set()
-        self.deep_gaze = deep_gaze
+        self.pupil_io = pupil_io
 
     async def handle_client(self, websocket, path):
         """
@@ -67,4 +67,4 @@ class SampleBroadcastServer(WebSocketServer):
 if __name__ == '__main__':
     # Usage example:
     # Create an instance of SampleBroadcastServer and start the server
-    broadcast_server = SampleBroadcastServer("localhost", 8001, DeepGaze())
+    broadcast_server = SampleBroadcastServer("localhost", 8001, Pupilio())

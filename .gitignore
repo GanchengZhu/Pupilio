@@ -7,3 +7,7 @@ token
 build.md
 docs/build
 pupilio/__pycache__
+example/data
+example/html
+example/log_et
+docs/workflow.pptx

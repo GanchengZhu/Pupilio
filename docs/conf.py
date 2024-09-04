@@ -29,6 +29,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
+    'sphinx_markdown_tables',
     'recommonmark',
 ]
 autosectionlabel_prefix_document = True

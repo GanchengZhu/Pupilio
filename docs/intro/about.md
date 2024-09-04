@@ -14,7 +14,6 @@ Pupilio is a lightweight Python package developed by Hangzhou Shennin Technology
 
 ## Specifications of Eye Tracker
 
-
 | Attribute                | Specification                                 |
 |--------------------------|-----------------------------------------------|
 | Sample Rate              | 200 Hz [Firmware upgradable to 400 Hz]        |
