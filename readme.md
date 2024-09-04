@@ -99,7 +99,7 @@ Comprehensive documentation is available at Pupilio [Documentation](https://pupi
 
 ## Support
 
-If you encounter any issues or have questions, please open an issue on GitHub or contact zhugc2016@gmail.com.
+If you encounter any issues or have questions, please open an issue on GitHub or contact [zhugc2016@gmail.com](mailto:zhugc2016@gmail.com).
 
 ## License
 
