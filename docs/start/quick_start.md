@@ -1,6 +1,4 @@
-# Quick-Start
-
-## Install Pupilio 
+# Install Pupilio 
 
 Currently, all eye trackers shipped with Pupilio are pre-configured with the necessary Pupilio Python packages. If we need to upgrade this package, please enter the following command in the command prompt or PowerShell window:
 
@@ -16,7 +14,7 @@ python
 ```
 If we see a window displaying pupilio version: ***, the installation was successful.
 
-## Starting Eye Tracking
+# Starting Eye Tracking
 
 Our calibration user interface supports both Pygame and PsychoPy, which means we need to initialize a window and pass it to the Pupilio instance. For simplicity and convenience, let's start with Pygame:
 
@@ -89,7 +87,7 @@ pupil_io.release()
 pygame.quit()
 ```
 
-## Pupilio Workflow
+# Pupilio Workflow
 
 
 Here is a flowchart illustrating the general workflow of Pupilio:

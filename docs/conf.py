@@ -4,10 +4,17 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../'))
 import sphinx_rtd_theme
 from recommonmark.parser import CommonMarkParser
 from recommonmark.transform import AutoStructify
+
+import sys
+from pathlib import Path
+
+current_script_path = Path(__file__)
+project_root = current_script_path.resolve().parent.parent.parent
+sys.path.append(str(project_root))
+sys.path.insert(0, str(project_root / "pupilio"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
