@@ -1,13 +1,8 @@
 import ctypes
 import os
 import platform
-import threading
-from collections import deque
-from typing import Tuple, List, Callable
 
 import numpy as np
-
-from .misc import Queue
 
 
 class Filter:
@@ -48,9 +43,9 @@ class Filter:
             np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
             np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS')]
 
-        self._filter_subscribers = []
-        self._filter_subscriber_lock = threading.Lock()
-        self._filter_timestamp_cache = Queue()
+        self.filter_native_lib.do_filter_bino.argtypes = [
+            np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
+            np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS')]
 
         # Initialize input and output arrays for left and right gaze
         self._left_input = np.zeros(2, dtype=np.float32)
@@ -59,97 +54,89 @@ class Filter:
         self._right_input = np.zeros(2, dtype=np.float32)
         self._right_output = np.zeros(2, dtype=np.float32)
 
-        self._timestamp_cache = deque()
-        self._left_sample_cache = deque()
-        self._right_sample_cache = deque()
-        self._sample_cache = deque()
-        self._n_drop = 2
-        self._n_add_left_sample_filter = 0
-        self._n_add_right_sample_filter = 0
+        self._bino_input = np.zeros(2, dtype=np.float32)
+        self._bino_output = np.zeros(2, dtype=np.float32)
 
     def filter_sample(self, sample):
         """
-        Filter a sample of left and right gaze.
-
-        :param sample
-        :param left_gaze: List or tuple containing left gaze coordinates (x, y). If left gaze don't exist,
-            please pass (np.nan, np.nan).
-        :param _right_coordinate: List or tuple containing right gaze coordinates (x, y). See left_gaze
-        :return: Tuple of filtered left and right gaze coordinates as lists
+        Filter a sample of left, right, and bino gaze.
         """
 
         _timestamp = sample['timestamp']
-        _left_coordinate = [np.nan, np.nan]
-        _right_coordinate = [np.nan, np.nan]
+
+        # Extract samples
         _left_sample = sample['left_eye_sample']
         _right_sample = sample['right_eye_sample']
+        _bino_sample = sample['bino_gaze_position']
 
-        if _left_sample[13]:
-            _left_coordinate[0] = _left_sample[0]
-            _left_coordinate[1] = _left_sample[1]
-        if _right_sample[13]:
-            _right_coordinate[0] = _right_sample[0]
-            _right_coordinate[1] = _right_sample[1]
-
-        self._timestamp_cache.append(_timestamp)
-        self._sample_cache.append(sample)
-        _flag_left = False
-        _flag_right = False
-
-        if _left_coordinate[0] != np.nan:
-            self._left_input[0] = _left_coordinate[0]
-            self._left_input[1] = _left_coordinate[1]
+        # Process left eye sample
+        if _left_sample[0] is not np.nan and _left_sample[1] is not np.nan and _left_sample[13]:
+            self._left_input = np.array([_left_sample[0], _left_sample[1]], dtype=np.float32)  # Convert to ndarray
             _flag_left = self.filter_native_lib.do_filter_left(self._left_input, self._left_output)
-            if self._n_add_left_sample_filter < 4:
-                self._n_add_left_sample_filter += 1
-            else:
-                self._left_sample_cache.append(self._left_output.tolist())
+            sample['left_eye_sample'][:2] = self._left_output[:2]
 
-        elif not self._n_drop:
-            self._left_sample_cache.append(_left_coordinate)
-
-        if _right_coordinate[0] != np.nan:
-            self._right_input[0] = _right_coordinate[0]
-            self._right_input[1] = _right_coordinate[1]
+        # Process right eye sample
+        if _right_sample[0] is not np.nan and _right_sample[1] is not np.nan and _right_sample[13]:
+            self._right_input = np.array([_right_sample[0], _right_sample[1]], dtype=np.float32)  # Convert to ndarray
             _flag_right = self.filter_native_lib.do_filter_right(self._right_input, self._right_output)
-            if self._n_add_right_sample_filter < 4:
-                self._n_add_right_sample_filter += 1
-            else:
-                self._right_sample_cache.append(self._right_output.tolist())
-        elif not self._n_drop:
-            self._right_sample_cache.append(_right_coordinate)
+            sample['right_eye_sample'][:2] = self._right_output[:2]
 
-        # Call the filter functions with input and output array
-        if self._n_drop > 0:
-            # do noting except decrementing
-            self._n_drop -= 1
-            self._left_sample_cache.append(_left_coordinate)
-            self._right_sample_cache.append(_right_coordinate)
+        # Process bino gaze position
+        if (_left_sample[13] and _right_sample[13] and
+                (_bino_sample[0] is not np.nan and _bino_sample[1] is not np.nan)):
+            self._bino_input = np.array([_bino_sample[0], _bino_sample[1]], dtype=np.float32)  # Convert to ndarray
+            _flag_bino = self.filter_native_lib.do_filter_bino(self._bino_input, self._bino_output)
+            sample['bino_gaze_position'][:2] = self._bino_output[:2]
 
-        else:
-            self.dispatch_sample(timestamp=self._timestamp_cache.popleft(),
-                                 sample=self._sample_cache.popleft(),
-                                 left_coordinate=self._left_sample_cache.popleft(),
-                                 right_coordinate=self._right_sample_cache.popleft())
+        return sample
 
-    def dispatch_sample(self, **kwargs):
-        with self._filter_subscriber_lock:
-            for subscriber in self._filter_subscribers:
-                subscriber(**kwargs)
 
-    def subscribe(self, *subscribers):
-        with self._filter_subscriber_lock:
-            for call in subscribers:
-                if isinstance(call, Callable):
-                    self._filter_subscribers.append(call)
-                else:
-                    raise Exception("Subscriber's args must be Callable")
+if __name__ == '__main__':
 
-    def unsubscribe(self, *subscribers):
-        with self._filter_subscriber_lock:
-            for call in subscribers:
-                if isinstance(call, Callable):
-                    if call in self._filter_subscribers:
-                        self._filter_subscribers.remove(call)
-                else:
-                    raise Exception("Subscriber's args must be Callable")
+    import random
+
+
+    def add_noise_to_samples(instances, noise_range=(-0.5, 0.5)):
+        """
+        Adds noise to the first two elements of left_eye_sample, right_eye_sample,
+        and bino_gaze_position for each instance.
+
+        Args:
+            instances (list): A list of sample instances to modify.
+            noise_range (tuple): A tuple specifying the range for random noise.
+        """
+        for instance in instances:
+            # Add noise to left_eye_sample
+            instance["left_eye_sample"][0] += random.uniform(*noise_range)
+            instance["left_eye_sample"][1] += random.uniform(*noise_range)
+
+            # Add noise to right_eye_sample
+            instance["right_eye_sample"][0] += random.uniform(*noise_range)
+            instance["right_eye_sample"][1] += random.uniform(*noise_range)
+
+            # Add noise to bino_gaze_position
+            instance["bino_gaze_position"][0] += random.uniform(*noise_range)
+            instance["bino_gaze_position"][1] += random.uniform(*noise_range)
+
+
+    # 创建初始样本
+    _new_sample = {
+        "left_eye_sample": [1, 2] + [1] * 12,
+        "right_eye_sample": [1, 2] + [1] * 12,
+        "bino_gaze_position": [1, 2],
+        "timestamp": 123456,
+    }
+
+    # 生成12个样本的副本
+    instances = [_new_sample.copy() for _ in range(12)]
+
+    # 添加扰动
+    add_noise_to_samples(instances)
+
+    # 创建过滤器管理器
+    filter_manager = Filter(look_ahead=2)
+
+    # 对所有12个样本应用过滤器
+    for i in range(12):
+        _sample = filter_manager.filter_sample(instances[i])
+        print(f"Sample {i + 1}: {_sample}")

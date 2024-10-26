@@ -4,13 +4,16 @@ import os
 import pathlib
 import platform
 import shutil
+import socket
+import sys
 import threading
 from datetime import datetime
 from typing import Callable, Tuple
 
+import cv2
 import numpy as np
 
-from .event_detection import OnlineEventDetection
+from .filter import Filter
 from .graphics import CalibrationUI
 from .misc import ET_ReturnCode, TriggerHandler, Queue
 
@@ -23,12 +26,26 @@ def _sample_2_string(data):
                 "status": status,
                 "left_eye_sample": left_eye_sample,
                 "right_eye_sample": right_eye_sample,
+                "bino_gaze_position": bino gaze position,
                 "timestamp": timestamp
             }
     :return: str, for csv file saving.
     """
     return (f"{data['timestamp']},{','.join(str(val) for val in data['left_eye_sample'])}," +
-            f"{','.join(str(val) for val in data['right_eye_sample'])},{data['trigger']}\n")
+            f"{','.join(str(val) for val in data['right_eye_sample'])},"
+            f"{','.join(str(val) for val in data['bino_gaze_position'])},{data['trigger']}\n")
+
+
+class Rect(ctypes.Structure):
+    _fields_ = [("x", ctypes.c_int),
+                ("y", ctypes.c_int),
+                ("width", ctypes.c_int),
+                ("height", ctypes.c_int)]
+
+
+class Point2f(ctypes.Structure):
+    _fields_ = [("x", ctypes.c_float),
+                ("y", ctypes.c_float)]
 
 
 class Pupilio:
@@ -50,7 +67,7 @@ class Pupilio:
             os.add_dll_directory(_lib_dir)
             os.environ['PATH'] = _lib_dir + ';' + os.environ['PATH']
             # dll
-            _dll_path = os.path.join(_lib_dir, 'PupilioET.dll')
+            _dll_path = os.path.join(_lib_dir, 'DeepGazeET.dll')
             self._et_native_lib = ctypes.CDLL(_dll_path, winmode=0)
 
         else:
@@ -63,6 +80,9 @@ class Pupilio:
         self._et_native_lib.deep_gaze_est.restype = ctypes.c_int
         self._et_native_lib.deep_gaze_release.restype = ctypes.c_int
         self._et_native_lib.deep_gaze_est_lr.restype = ctypes.c_int
+        self._et_native_lib.deep_gaze_get_previewer.restype = ctypes.c_int
+        self._et_native_lib.deep_gaze_get_version.restype = ctypes.c_char_p
+
 
         # Set argument types for functions
         self._et_native_lib.deep_gaze_cali.argtypes = [ctypes.c_int]
@@ -75,6 +95,17 @@ class Pupilio:
             np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
             np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
             ctypes.POINTER(ctypes.c_longlong)]
+        self._et_native_lib.deep_gaze_get_previewer.argtypes = [
+            ctypes.POINTER(ctypes.POINTER(ctypes.c_ubyte)),  # img_1
+            ctypes.POINTER(ctypes.POINTER(ctypes.c_ubyte)),  # img_2
+            np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
+            np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
+            np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
+        ]
+
+        # configuration deep_gaze_get_previewer
+        self.filter_look_ahead = 2
+        self.enable_filter = True
 
         # Attributes for handling sampling and locking
         # Mutex lock for managing subscribers
@@ -94,6 +125,9 @@ class Pupilio:
         # Name for the current session
         self._session_name = None
 
+        version = self._et_native_lib.deep_gaze_get_version()
+        print("Native Pupilio Version:", version.decode("utf-8"))
+
         # Initialize Pupilio, raise an exception if initialization fails
         if self._et_native_lib.deep_gaze_init() != ET_ReturnCode.ET_SUCCESS.value:
             raise Exception("Pupilio init failed, please contact the developer!")
@@ -103,7 +137,15 @@ class Pupilio:
         self._pt_l = np.zeros(14, dtype=np.float32)
         self._pt_r = np.zeros(14, dtype=np.float32)
 
+        self._previewer_thread = None
         self._online_event_detection = None
+
+    def previewer_start(self, udp_host: str, udp_port: int):
+        self._previewer_thread = PreviewThread(self, udp_host, udp_port)
+        self._previewer_thread.start()
+
+    def previewer_stop(self):
+        self._previewer_thread.stop()
 
     def create_session(self, session_name: str) -> int:
         """
@@ -124,16 +166,18 @@ class Pupilio:
         # Name for the current session
         self._session_name = session_name
 
-        self._online_event_detection = OnlineEventDetection()
-        with self._sample_subscriber_lock:
-            self._sample_subscribers.append((self._online_event_detection.handle_sample, [], {}))
+        # self._online_event_detection = OnlineEventDetection()
+        # with self._sample_subscriber_lock:
+        #     self._sample_subscribers.append((self._online_event_detection.handle_sample, [], {}))
 
         # Thread for sampling eye gaze
         if not self._sample_thread:
             self._sample_thread = SampleThread(pupil_io=self)
         else:
             self._sample_thread.running = False
+            self._sample_thread.join()
             self._sample_thread = SampleThread(pupil_io=self)
+
         self._sample_thread.start()  # Start the sampling thread
 
         self._workSpace = pathlib.Path.home().joinpath("Pupilio")
@@ -168,7 +212,9 @@ class Pupilio:
             "right_eye_pupil_position_x,right_eye_pupil_position_y,right_eye_pupil_position_z," +
             "right_eye_visual_angle_theta,right_eye_visual_angle_phi,right_eye_visual_angle_vector_x," +
             "right_eye_visual_angle_vector_y,right_eye_visual_angle_vector_z,right_eye_pixels_per_degree_x," +
-            "right_eye_pixels_per_degree_y,right_eye_valid,trigger\n"
+            "right_eye_pixels_per_degree_y,right_eye_valid," +
+            "bino_eye_gaze_position_x,bino_eye_gaze_position_y,"
+            "trigger\n"
         )
 
         # Create a logger instance
@@ -179,9 +225,9 @@ class Pupilio:
         file_handler = logging.FileHandler(str(_logFile))
         file_handler.setLevel(logging.DEBUG)
 
-        # Create a console handler for logging to console
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG)
+        # # Create a console handler for logging to console
+        # console_handler = logging.StreamHandler()
+        # console_handler.setLevel(logging.DEBUG)
 
         # Define a logging format
         formatter = logging.Formatter(
@@ -190,11 +236,11 @@ class Pupilio:
 
         # Set the formatter for both file and console handlers
         file_handler.setFormatter(formatter)
-        console_handler.setFormatter(formatter)
+        # console_handler.setFormatter(formatter)
 
         # Add the file and console handlers to the logger
         logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
+        # logger.addHandler(console_handler)
 
         return ET_ReturnCode.ET_SUCCESS.value
 
@@ -478,7 +524,7 @@ class Pupilio:
             Exception: If any of the args are not Callable.
         """
 
-        self._online_event_detection.subscribe(*args)
+        # self._online_event_detection.subscribe(*args)
         pass
 
     def unsubscribe_event(self, *args):
@@ -486,13 +532,13 @@ class Pupilio:
         Unsubscribe functions from receiving eye tracking sample.
         """
 
-        self._online_event_detection.unsubscribe(*args)
+        # self._online_event_detection.unsubscribe(*args)
         pass
 
     def clear_cache(self) -> int:
         """Clear the cache."""
         self._workSpace = pathlib.Path.home().joinpath("Pupilio")
-        if not self._workSpace.exists():
+        if self._workSpace.exists():
             shutil.rmtree(self._workSpace)
         return ET_ReturnCode.ET_SUCCESS.value
 
@@ -520,6 +566,10 @@ class SampleThread(threading.Thread):
         self._last_timestamp = 0
         self._cache_size = 2
         self._sample_cache: Queue = Queue(cache_size=self._cache_size)
+        self._filter_manager = Filter(look_ahead=pupil_io.filter_look_ahead)
+        self._left_eye_ratio = 0.5
+        self._right_eye_ratio = 0.5
+        self._corner = np.array([960, 1080])
 
     def run(self):
         """
@@ -546,21 +596,37 @@ class SampleThread(threading.Thread):
                                 for subscriber, args, kwargs in self._pupil_io.sample_subscribers:
                                     # subscriber(_sample)
                                     subscriber(_sample, *args, **kwargs)
-
                         # Prepare data dictionary
+                        # sample generator
+                        _bino_gaze = (self._left_eye_ratio * _left_eye_sample[:2] +
+                                      self._right_eye_ratio * _right_eye_sample[:2])
+
+                        bias0 = _bino_gaze - self._corner
+                        k0 = 1.4338e-4 * (np.linalg.norm(bias0) - 750) + 1
+                        k = max(k0, 1)
+                        bias1 = k * bias0
+                        _bino_gaze = bias1 + self._corner
+
                         _new_sample = {
                             "status": _status,
-                            # transform numpy array to native python dict
+                            # transform numpy array to native python list
                             "left_eye_sample": _left_eye_sample.tolist(),
                             "right_eye_sample": _right_eye_sample.tolist(),
+                            "bino_gaze_position": (_bino_gaze).tolist(),
                             "timestamp": _timestamp,
                             "trigger": _trigger,
                         }
+
+                        # filter
+                        if self._pupil_io.enable_filter:
+                            _new_sample = self._filter_manager.filter_sample(_new_sample)
+
                         self._sample_cache.enqueue(_new_sample)
 
                 except Exception as e:
                     # Handle any exceptions that might occur during estimation
                     logging.exception("sample callback function error: {}".format(e.args))
+                    sys.exit(1)
 
             elif not self._sample_cache.empty():
                 # clear the data sample cache
@@ -572,12 +638,104 @@ class SampleThread(threading.Thread):
                 except Exception as e:
                     # Handle any exceptions that might occur during estimation
                     logging.exception("sample callback function error: {}".format(e))
+                    sys.exit(1)
 
     def stop_thread(self):
         """
         Stop the thread.
         """
         self._running = False  # Set running flag false to exit the loop
+
+
+class PreviewThread(threading.Thread):
+    def __init__(self, pupil_io: Pupilio, udp_host: str = '10.22.81.195', udp_port: int = 8848):
+        threading.Thread.__init__(self)
+        self._pupil_io = pupil_io
+        self._is_running = True
+        self.daemon = True
+        self.IMG_HEIGHT, self.IMG_WIDTH = 1024, 1280
+
+        # preview retrieving
+        self._preview_img_1 = np.zeros((self.IMG_HEIGHT, self.IMG_WIDTH), dtype=np.uint8)
+        self._preview_img_2 = np.zeros((self.IMG_HEIGHT, self.IMG_WIDTH), dtype=np.uint8)
+        self._eye_rects = np.zeros(4 * 4, dtype=np.float32)  # 4个眼睛矩形
+        self._pupil_centers = np.zeros(4 * 2, dtype=np.float32)  # 4个瞳孔中心
+        self._glint_centers = np.zeros(4 * 2, dtype=np.float32)  # 4个闪光中心
+
+        # UDP host and port
+        self.udp_host = udp_host
+        self.udp_port = udp_port
+        self.udp_address = (self.udp_host, self.udp_port)
+        # self.check_port_availability()
+        # Create UDP socket
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # self.sock.bind(self.udp_address)
+        self.preview_compression = [cv2.IMWRITE_JPEG_QUALITY, 40]  # ratio: 0~100
+        self.preview_format = ".jpg"
+
+    def check_port_availability(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            if s.connect_ex(self.udp_address) == 0:
+                logging.exception(f"Port {self.udp_address} is already in use. Exiting the program.")
+                sys.exit(1)
+
+    def stop(self):
+        self._is_running = False
+        self.join()
+        self.sock.close()
+
+    def run(self):
+        while self._is_running:
+            img_1_ptr = self._preview_img_1.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte))
+            img_2_ptr = self._preview_img_2.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte))
+
+            result = self._pupil_io._et_native_lib.deep_gaze_get_previewer(ctypes.pointer(img_1_ptr),
+                                                                           ctypes.pointer(img_2_ptr),
+                                                                           self._eye_rects, self._pupil_centers,
+                                                                           self._glint_centers)
+
+            ctypes.memmove(self._preview_img_1.ctypes.data, img_1_ptr, self._preview_img_1.nbytes)
+            ctypes.memmove(self._preview_img_2.ctypes.data, img_2_ptr, self._preview_img_2.nbytes)
+
+            if result == ET_ReturnCode.ET_SUCCESS:
+                combined_image = self.process_images(self._preview_img_1, self._preview_img_2,
+                                                     self._eye_rects, self._pupil_centers, self._glint_centers)
+
+                self.send_udp_frame(combined_image)
+
+    def process_images(self, img1: np.ndarray, img2: np.ndarray, eye_rects: np.ndarray,
+                       pupil_centers: np.ndarray, glint_centers: np.ndarray) -> np.ndarray:
+        imgs = [img1, img2]
+        rects = [
+            [eye_rects[:4], eye_rects[4:8]],
+            [eye_rects[8:12], eye_rects[12:16]]
+        ]
+        pupil_center_list = [
+            [pupil_centers[0:2], pupil_centers[2:4]],
+            [pupil_centers[4:6], pupil_centers[6:8]]
+        ]
+        glint_center_list = [
+            [glint_centers[0:2], glint_centers[2:4]],
+            [glint_centers[4:6], glint_centers[6:8]]
+        ]
+
+        for n, img in enumerate(imgs):
+            for m, eye_rect in enumerate(rects[n]):
+                x, y, w, h = eye_rect
+                cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
+
+                pupil_center = tuple(map(int, pupil_center_list[n][m]))
+                glint_center = tuple(map(int, glint_center_list[n][m]))
+
+                cv2.circle(img, pupil_center, 5, (0, 255, 0), -1)
+                cv2.circle(img, glint_center, 5, (0, 255, 0), -1)
+
+            imgs[n] = cv2.resize(img, (320, 256))
+        return np.hstack(imgs)
+
+    def send_udp_frame(self, frame: np.ndarray):
+        ret, buffer = cv2.imencode(self.preview_format, frame, self.preview_compression)
+        self.sock.sendto(buffer.tobytes(), self.udp_address)
 
 
 if __name__ == '__main__':
