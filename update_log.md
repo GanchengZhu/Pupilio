@@ -1,6 +1,11 @@
 # Pupilio SDK Update Log
 
-## Version 1.1.1 (Build 1) - 2024-10-15
+
+## Version 1.1.2 (Build 1) - 2024-10-15
+### Changes:
+- 
+
+## Version 1.1.1 (Build 3) - 2024-10-26
 ### Changes:
 - Added `build` number mechanism using timestamp.
 - Added `bino_eye_gaze_position`.
