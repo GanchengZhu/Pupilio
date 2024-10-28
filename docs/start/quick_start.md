@@ -36,6 +36,11 @@ Now that we have created a standard full-screen Pygame window, the next step is 
 ```Python
 # load Pupilio library
 from pupilio import Pupilio
+from psychopy import visual, core, event
+
+# use the Psychopy library for graphics, first open a full screen window
+scn_width, scn_height = (1920, 1080)
+win = visual.Window((scn_width, scn_height), fullscr=True, units='pix')
 
 # instantiate a connection to the tracker
 pupil_io = Pupilio()
@@ -47,7 +52,8 @@ pupil_io.create_session(session_name="quick_start")
 
 # calibration and validation (recommended)
 # set 'validate' to True if we would like to verify the calibration results
-pupil_io.calibration_draw(validate=True)
+# screen is an instance of pygame surface or psychopy.visual.Window
+pupil_io.calibration_draw(validate=True, screen=win)
 ```
 
 

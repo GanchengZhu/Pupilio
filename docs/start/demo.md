@@ -4,25 +4,141 @@
 
 In the previous section, we gained a preliminary understanding of the basic workflow of Pupilio. Now, we can implement a simple picture free-view task. This demonstration will guide you through the main usage of Pupilio.
 
-Firstly, please prepare two image files as experimental materials. 
-
-- lenna.png
-![lenna](../_static/images/start/demo/lenna.png)
-
-- lenna_gray.png
-![lenna_gray](../_static/images/start/demo/lenna_gray.png)
-
-Then, a following pythonic script will display the eye tracking calibration, validation, and image stimuli in order.  
-Most notably, this script demonstrates how to use the `pupil_io.subscribe_sample` method to subscribe to each frame of eye-tracking data and the `pupil_io.send_trigger` method to mark the onset of experimental stimuli. These functions are similar to markers in EEG signals, enabling precise recording of the timing of experimental events.
+PyGame implementation: 
 
 ```python
 #!/usr/bin/env python
 
-# Copyright (c) 2024, Hangzhou Deep Gaze Sci & Tech Ltd
+# Copyright (c) 2024, Hangzhou Deep Gaze Science and Technology Co., Ltd
 # All Rights Reserved
 #
-# For use by  Hangzhou Deep Gaze Sci & Tech Ltd licencees only.
-# Redistribution and use in source and binary forms, with or without
+# For use by  Hangzhou Deep Gaze Science and Technology Co., Ltd customers
+# only. Redistribution and use in source and binary forms, with or without
+# modification, are NOT permitted.
+#
+# Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in
+# the documentation and/or other materials provided with the distribution.
+#
+# Neither name of  Hangzhou Deep Gaze Sci & Tech Ltd nor the name of 
+# contributors may be used to endorse or promote products derived from 
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
+# IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# DESCRIPTION:
+# This is a demo showing how to use deep gaze pythonic library
+# In this script, we connect to the tracker, perform a calibration, 
+# validate the calibration results, then we subscribe to the sample data
+# stream, with which we constantly update the position of a gaze cursor
+
+# Author: Gancheng Zhu
+# Last updated: 10/28/2024 by ZW
+
+# Load libraries
+import os
+import time
+import pygame
+from pygame.locals import *
+from pupilio import Pupilio
+
+# use the Pygame library for graphics, first init pygame and open a full screen window
+pygame.init()
+scn_width, scn_height = (1920, 1080)
+win = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN|HWSURFACE)
+
+# instantiate a tracker object
+pupil_io = Pupilio()
+
+# create a task session, and set a session name
+# note that the "session name" will be used for logging by default
+pupil_io.create_session(session_name="deepgaze_demo")
+
+# set 'validate' to True if you would like to verify the calibration results
+pupil_io.calibration_draw(validate=True, hands_free=False, screen=win)
+
+#  start retrieving gaze
+pupil_io.start_sampling()
+pygame.time.wait(100)  # sleep for 100 ms so the tracker cache some sample
+
+# A free viewing task, in which we show a picture and overlay the gaze cursor
+img_folder = 'images'
+images = ['gray_grid.jpg', 'west_lake.jpg', 'old_town.jpg']
+
+# show the images one by one in a loop, press a ENTER key to exit the program
+for _img in images:
+    # show the image on screen
+    win.fill((128, 128, 128))
+    im = pygame.image.load(os.path.join(img_folder, _img))
+    win.blit(im, (0, 0))
+    pygame.display.flip()
+    # send a trigger to record in the eye movement data to mark picture onset
+    pupil_io.set_trigger(202)
+
+    # now lets show the gaze point, press any key to close the window
+    got_key = False
+    max_duration = 10000
+    t_start = pygame.time.get_ticks()
+    pygame.event.clear()  # clear all cached events if there were any
+    gx, gy = -65536, -65536
+    while not (got_key or (pygame.time.get_ticks() - t_start)>=max_duration):
+        # get the newest gaze position
+        left, right, bino = pupil_io.get_current_gaze()
+        status, gx, gy = bino
+        gx = int(gx)
+        gy = int(gy)
+
+        # check key presses
+        for ev in pygame.event.get():
+            if ev.type == KEYDOWN:
+                if ev.key == K_RETURN:
+                    got_key = True
+                # if ev.key == K_SPACE:
+
+        # update the visual (image and cursor)
+        win.blit(im, (0,0))
+        pygame.draw.circle(win, (0, 255, 0), (gx, gy), 50, 5)  # cursor for the left eye
+        pygame.display.flip()
+
+# stop sampling
+pygame.time.wait(100)  # sleep for 100 ms to capture ending samples
+pupil_io.stop_sampling()
+
+# save the sample data to file
+data_dir = "./data"
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
+
+file_name = "deepgaze_demo.csv"
+pupil_io.save_data(os.path.join(data_dir, file_name))
+
+# release the tracker instance
+pupil_io.release()
+
+# quit pygame
+pygame.quit()
+```
+
+PsychoPy implementation: 
+
+```python
+#!/usr/bin/env python
+
+# Copyright (c) 2024, Hangzhou Deep Gaze Science and Technology Co., Ltd
+# All Rights Reserved
+#
+# For use by  Hangzhou Deep Gaze Science and Technology Co., Ltd customers
+# only. Redistribution and use in source and binary forms, with or without
 # modification, are NOT permitted.
 #
 # Redistributions in binary form must reproduce the above copyright
@@ -49,146 +165,87 @@ Most notably, this script demonstrates how to use the `pupil_io.subscribe_sample
 # This is a demo showing how to use deep gaze pythonic library
 # In this script, we connect to the tracker, perform a calibration,
 # validate the calibration results, then we subscribe to the sample data
-# stream, with which we contantly update the position of a gaze cursor
+# stream, with which we constantly update the position of a gaze cursor
 
 # Author: Gancheng Zhu
-# Last updated: 4/11/2024
+# Last updated: 10/28/2024 by ZW
 
 # Load libraries
 import os
-import pygame
-from pygame.locals import FULLSCREEN, HWSURFACE, K_RETURN, KEYDOWN
+from psychopy import visual, core, event
 from pupilio import Pupilio
 
-# step 1: instantiate a connection to the tracker
+# use the Psychopy library for graphics, first open a full screen window
+scn_width, scn_height = (1920, 1080)
+win = visual.Window((scn_width, scn_height), fullscr=True, units='pix')
+
+# instantiate a tracker object
 pupil_io = Pupilio()
 
-# step 2: create a task session, and set a session name
+# create a task session, and set a session name
 # note that the "session name" will be used for logging by default
-pupil_io.create_session(session_name="pupilio_demo")
-
-# step 3: calibration and validation (optional)
-# for simplicity and minimal dependency, we use the Pygame library for
-# graphics, first init pygame and open a full screen window
-pygame.init()
-scn_width, scn_height = (1920, 1080)
-win = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN|HWSURFACE)
+pupil_io.create_session(session_name="deepgaze_demo")
 
 # set 'validate' to True if you would like to verify the calibration results
-pupil_io.calibration_draw(validate=True)
+pupil_io.calibration_draw(screen=win, validate=True, hands_free=False)
 
-# step 4: create subscribers (callable function) to listen to the eye tracking data streams
-# one can subscribe to either the sample, event data stream, or both
-# NOTE: DO NOT include time-consuming operations (those take more than 5 milliseconds)
-# in a subscriber, as this may decrease the eye tracking frame rate.
-#
-# here we show how to subscribe to the sample data stream, first instantiate a global
-# varible to store the current left- and right-eye gaze position
-newest_gaze = [0, 0, 0, 0]
-
-def sample_subscriber(sample):
-    """
-    In this subscriber, we retrieve the left- and right- gaze position (in screen
-    pixel coordinates, and use it to update the global variable newest_gaze)
-
-    'sample' is an instance of dict. The format is as follows:
-    sample = {
-        "marker": marker, # current received marker, if not exists, marker will be -1
-        "status": status, # status of eye tracking devices, see ETReturn_Code
-        "gaze_sample": gaze_sample,
-        "timestamp": timestamp
-        }
-
-    'gaze_sample' is a list, which contains 11 elements as follows:
-         gaze_sample[0]: left eye gaze position x (0~1920)
-         gaze_sample[1]: left eye gaze position y (0~1080)
-         gaze_sample[2]: left eye pupil size (0~10) (mm)
-         gaze_sample[3]: right eye gaze position x (0~1920) pix
-         gaze_sample[4]: right eye gaze position y (0~1080) pix
-         gaze_sample[5]: right eye pupil size (0~10) (mm)
-         gaze_sample[6]: pixels per degree X
-         gaze_sample[7]: pixels per degree Y
-         gaze_sample[8]: flag norm:0; miss left eye:1;miss right eye:2;no eyes:3
-         gaze_sample[9]: bino gaze position x (0~1920) pix
-         gaze_sample[10]:bino gaze position y (0~1920) pix
-    """
-
-    newest_gaze[0] = sample['left_eye_sample'][0]
-    newest_gaze[1] = sample['left_eye_sample'][1]
-    newest_gaze[2] = sample['right_eye_sample'][0]
-    newest_gaze[3] = sample['right_eye_sample'][1]
-
-# step 5: subscript to the sample stream using the above deifned sample_subscriber
-pupil_io.subscribe_sample(sample_subscriber)
-
-# step 6: start retrieving gaze
+#  start retrieving gaze
 pupil_io.start_sampling()
-pygame.time.wait(100)  # sleep for 100 ms so the tracker cache some some sample
+core.wait(0.1)  # sleep for 100 ms so the tracker cache some sample
 
-# step 7: A free viewing task, in which we show a picture and overlay the gaze cursor
-
+# A free viewing task, in which we show a picture and overlay the gaze cursor
 img_folder = 'images'
-images = ['lenna.png', 'lenna_gray.png']
+images = ['gray_grid.jpg', 'west_lake.jpg', 'old_town.jpg']
 
 # show the images one by one in a loop, press a ENTER key to exit the program
 for _img in images:
-    # step 7.1: show a fixation on screen
-    win.fill((128, 128, 128))
-    pygame.draw.line(win, (0, 255, 0), (scn_width//2 - 20, scn_height//2),
-                     (scn_width//2 + 20, scn_height//2), 3)
-    pygame.draw.line(win, (0, 255, 0), (scn_width//2, scn_height//2 - 20),
-                     (scn_width//2, scn_height//2 + 20), 3)
-    pygame.display.flip()
-    # send a trigger to record in the eye movemen data to mark fixation onset
-    # a trigger could be an integer between 1-255
-    pupil_io.set_trigger(201)
-    # show the fixation for 1 sec
-    pygame.time.wait(1000)
-
-    # step 7.2: show the image on screen
-    im = pygame.image.load(os.path.join(img_folder, _img))
-    win.blit(im, (0,0))
-    pygame.display.flip()
-    # send a trigger to record in the eye movemen data to mark picture onset
+    # show the image on screen
+    im = visual.ImageStim(win, os.path.join(img_folder, _img))
+    im.draw()
+    win.flip()
+    # send a trigger to record in the eye movement data to mark picture onset
     pupil_io.set_trigger(202)
 
     # now lets show the gaze point, press any key to close the window
     got_key = False
-    max_duration = 5000
-    t_start = pygame.time.get_ticks()
-    while not (got_key or (pygame.time.get_ticks() - t_start)>=5000):
+    max_duration = 10
+    t_start = core.getTime()
+    event.clearEvents()  # clear all cached events if there were any
+    gx, gy = -65536, -65536
+    while not (got_key or (core.getTime() - t_start)>=max_duration):
         # get the newest gaze position
-        lx = int(newest_gaze[0])
-        ly = int(newest_gaze[1])
-        rx = int(newest_gaze[2])
-        ry = int(newest_gaze[3])
-        # check key presses
-        for ev in pygame.event.get():
-            if (ev.type == KEYDOWN):
-                if ev.key == K_RETURN:
-                    got_key = True
-                # if ev.key == K_SPACE:
+        left, right, bino = pupil_io.get_current_gaze()
+        status, gx, gy = bino
+        # convert to psychopy coordinates, screen center = (0,0)
+        gx = gx -960
+        gy = 540 - gy
 
-        # update the visual (image and cursor)
-        win.blit(im, (0,0))
-        pygame.draw.circle(win, (0, 0, 255), (rx, ry), 25)
-        pygame.display.flip()
+        # check keyboard events
+        if event.getKeys():
+            got_key = True
 
-# step 8: stop sampling
+        # redraw the screen
+        win.color =(0,0,0)
+        im.draw()
+        gaze_cursor = visual.Circle(win, 50, pos=(gx, gy), lineColor=(-1, 1, -1), lineWidth=5, fillColor=None)
+        gaze_cursor.draw()
+        win.flip()
+
+# stop sampling
+core.wait(0.1)  # sleep for 100 ms to capture ending samples
 pupil_io.stop_sampling()
-pygame.time.wait(100)  # sleep for 100 ms to capture ending samples
 
-# step 9: save the sample data to file
+# save the sample data to file
 data_dir = "./data"
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
-file_name = "pupil_io_demo.csv"
+file_name = "deepgaze_demo.csv"
 pupil_io.save_data(os.path.join(data_dir, file_name))
 
-# step 10: release the tracker instance
+# release the tracker instance
 pupil_io.release()
 
 # quit pygame
-pygame.quit()
+core.quit()
 ```
