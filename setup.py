@@ -37,7 +37,7 @@ class CustomBuildExt(build_ext):
 
 major_version = '1'
 minor_version = '1'
-patch_version = '1'
+patch_version = '2'
 
 setup(
     name="pupilio",
