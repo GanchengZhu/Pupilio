@@ -68,7 +68,7 @@ pupil_io.create_session(session_name="quick_start")
 
 # calibration and validation (recommended)
 # set 'validate' to True if we would like to verify the calibration results
-pupil_io.calibration_draw(validate=True)
+pupil_io.calibration_draw(screen=win, validate=True)
 
 # start retrieving gaze
 pupil_io.start_sampling()
