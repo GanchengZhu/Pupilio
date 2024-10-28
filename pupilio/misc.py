@@ -93,9 +93,13 @@ class LocalConfig:
         Initialize LocalConfig.
         This loads a JSON configuration file and stores it in 'dp_config'.
         """
-        config_path = pathlib.Path(__file__).resolve().parent.joinpath('local_config/deep_config.json')
-        with open(str(config_path), 'r') as f:
-            self.dp_config = json.load(f)
+        self.dp_config = {
+            "model_name": "Pupil.IO AIO",
+            "screen_width": 1920,
+            "screen_height": 1080,
+            "physical_screen_width": 34.13,
+            "physical_screen_height": 19.32
+        }
 
 
 class Calculator:
@@ -234,7 +238,7 @@ class Queue:
 
 if __name__ == '__main__':
     config = {
-        "model_name": "Deep Gaze 1",
+        "model_name": "Pupil.IO AIO",
         "screen_width": 1920,
         "screen_height": 1080,
         "physical_screen_width": 34.13,

@@ -41,7 +41,7 @@ patch_version = '1'
 
 setup(
     name="pupilio",
-    version=f"{major_version}.{minor_version}.{patch_version}+build{build_number}",
+    version=f"{major_version}.{minor_version}.{patch_version}",
     author="Pupilio",
     author_email="zhugc2016@gmail.com",
     description="Pupilio Library",
@@ -53,7 +53,7 @@ setup(
     },
 
     install_requires=[
-        'numpy', 'pygame', 'websockets'
+        'numpy', 'pygame', 'websockets', 'opencv-python',
     ],
 
     cmdclass={'build_ext': CustomBuildExt},

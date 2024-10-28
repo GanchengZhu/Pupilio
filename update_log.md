@@ -3,7 +3,10 @@
 
 ## Version 1.1.2 (Build 1) - 2024-10-15
 ### Changes:
-- 
+- Rewrite some features using c++
+- Support PyGame and PsychoPy
+- Removing some useless py files
+- Update example code
 
 ## Version 1.1.1 (Build 3) - 2024-10-26
 ### Changes:
