@@ -5,11 +5,8 @@ import os
 import platform
 import sys
 from typing import Callable, Tuple
-
 import numpy as np
-
 from .annotation import deprecated
-from .graphics import CalibrationUI
 from .misc import ET_ReturnCode
 
 
@@ -410,9 +407,9 @@ class Pupilio:
             raise Exception("Screen cannot be None. Please pass pygame window or psychopy window instance")
 
         if screen_type == 'pygame':
-            from graphics_pygame import CalibrationUI
+            from .graphics_pygame import CalibrationUI
         else:
-            from graphics import CalibrationUI
+            from .graphics import CalibrationUI
 
         if not hands_free:
             CalibrationUI(pupil_io=self, screen=screen).draw(validate=validate, bg_color=bg_color)
