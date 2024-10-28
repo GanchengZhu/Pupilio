@@ -1,4 +1,4 @@
-__version__ = "1.1.3"
+__version__ = "1.1.2"
 
 __title__ = "Pupil.IO"
 __description__ = "Pupil.IO is a toolbox for using eye trackers. " \
