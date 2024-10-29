@@ -35,9 +35,9 @@ class CustomBuildExt(build_ext):
         shutil.copy('pupilio/lib/libfilter.dll', build_lib)
 
 
-major_version = '1'
-minor_version = '1'
-patch_version = '2'
+from pupilio import version
+
+major_version, minor_version, patch_version = version.__version__.split(".")
 
 setup(
     name="pupilio",
