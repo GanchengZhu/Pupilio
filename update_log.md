@@ -1,7 +1,13 @@
 # Pupilio SDK Update Log
 
 
-## Version 1.1.2 (Build 1) - 2024-10-15
+## Version 1.1.3 (Build 1) - 2024-10-29
+### Changes:
+- calibration_draw function logic modify.
+- Calibration PsychoPy components set units `pix`.
+
+
+## Version 1.1.2 (Build 1) - 2024-10-28
 ### Changes:
 - Rewrite some features using c++
 - Support PyGame and PsychoPy

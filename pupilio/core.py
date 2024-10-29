@@ -5,7 +5,9 @@ import os
 import platform
 import sys
 from typing import Callable, Tuple
+
 import numpy as np
+
 from .annotation import deprecated
 from .misc import ET_ReturnCode
 
@@ -391,16 +393,22 @@ class Pupilio:
             bg_color (tuple): Background color
             hands_free (bool): Whether to hands free
         """
-        screen_type = None
-        from pygame import Surface
-        if isinstance(screen, Surface):
-            screen_type = 'pygame'
-        else:
+        screen_type = ""
+        try:
+            from pygame import Surface
+            if isinstance(screen, Surface):
+                screen_type = 'pygame'
+        except:
+            pass
+
+        try:
             from psychopy.visual import Window
             if isinstance(screen, Window):
                 screen_type = 'psychopy'
+        except:
+            pass
 
-        if screen_type is None:
+        if screen_type == "":
             raise Exception("Screen cannot be None. Please pass pygame window or psychopy window instance")
 
         if screen is None:

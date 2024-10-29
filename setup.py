@@ -47,9 +47,10 @@ setup(
     description="Pupilio Library",
     url="https://deep-gaze.com/sdk/python",
     packages=find_packages(),
-
+    long_description=open('README.md').read(),  # 或者使用其他文档文件
+    long_description_content_type='text/markdown',  # 如果使用 Markdown 格式
     package_data={
-        'pupilio': ['lib/*.dll', 'resources/*', "local_config/*", "asset/*"],
+        'pupilio': ['lib/*.dll', 'resources/*', "asset/*"],
     },
 
     install_requires=[
