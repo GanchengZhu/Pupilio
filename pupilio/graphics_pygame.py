@@ -657,6 +657,8 @@ class CalibrationUI(object):
                         self._phase_validation = False
 
                     elif event.key == pygame.K_r and self._drawing_validation_result:
+                        if self._pupil_io._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:
+                            raise Exception("Pupilio init failed, please contact the developer!")
                         self.draw(self._need_validation, bg_color=bg_color)
 
                     elif event.key == pygame.K_q:
