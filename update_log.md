@@ -1,10 +1,15 @@
 # Pupilio SDK Update Log
 
 
-## Version 1.1.3 (Build 1) - 2024-10-29
+## Version 1.1.3 (Build 1) - 2024-11-02
 ### Changes:
-- calibration_draw function logic modify.
+- Calibration_draw function logic modify.
 - Calibration PsychoPy components set units `pix`.
+- Press R to recalibrate.
+- Deleting pygame.init in graphics.py, this may cause minimizing pygame screen.
+- Add create session name checking. The session name must contain only letters, digits or underscores without any special characters.
+- Deleting resource deep gaze icon.
+- Update libfilter.dll with MSVC_RUNTIME_LIBRARY.
 
 
 ## Version 1.1.2 (Build 1) - 2024-10-28

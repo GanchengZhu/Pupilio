@@ -3,6 +3,7 @@ import ipaddress
 import logging
 import os
 import platform
+import re
 import sys
 from typing import Callable, Tuple
 
@@ -143,11 +144,17 @@ class Pupilio:
 
         Args:
             session_name: Name of the session. For defining logging files and temporary files.
+            The session name must contain only letters, digits or underscores without any special characters.
 
         Returns:
             int: ET_ReturnCode indicating the success or failure of session creation.
         """
         self._session_name = session_name
+        available_session = bool(re.fullmatch(r'^[a-zA-Z0-9_]+$', session_name))
+        if not available_session:
+            raise Exception(
+                f"Session name '{session_name}' is invalid. Ensure it includes only letters, digits, "
+                f"or underscores without any special characters.")
         return self._et_native_lib.pupil_io_create_session(self._session_name.encode('utf-8'))
 
     def save_data(self, path: str) -> int:
@@ -390,9 +397,22 @@ class Pupilio:
         Args:
             screen: The screen to draw on. You can choose pygame window or psychopy window
             validate (bool): Whether to validate the calibration result.
-            bg_color (tuple): Background color
+            bg_color (tuple): Background color, specific parameter for pygame
             hands_free (bool): Whether to hands free
         """
+
+        if screen is None:
+            try:
+                import pygame
+                from pygame.locals import FULLSCREEN, HWSURFACE
+                pygame.init()
+                scn_width, scn_height = (1920, 1080)
+                screen = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN | HWSURFACE)
+            except:
+                print("The parameter passed is None, creating a new pygame screen.")
+                raise Exception("pygame screen can't be created.")
+
+
         screen_type = ""
         try:
             from pygame import Surface
@@ -409,9 +429,6 @@ class Pupilio:
             pass
 
         if screen_type == "":
-            raise Exception("Screen cannot be None. Please pass pygame window or psychopy window instance")
-
-        if screen is None:
             raise Exception("Screen cannot be None. Please pass pygame window or psychopy window instance")
 
         if screen_type == 'pygame':

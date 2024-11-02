@@ -1,4 +1,8 @@
-__version__ = "1.1.3"
+_major_version = '1'
+_minor_version = '1'
+_patch_version = '3'
+
+__version__ = f'{_major_version}.{_minor_version}.{_patch_version}'
 
 __title__ = "Pupil.IO"
 __description__ = "Pupil.IO is a toolbox for using eye trackers. " \

@@ -649,9 +649,12 @@ class CalibrationUI(object):
             elif ('esc' in _keys) or ('q' in _keys) or ('Q' in _keys):
                 self._exit = True
 
+            elif ('r' in _keys) and self._drawing_validation_result:
+                self.draw(self._need_validation, bg_color=bg_color)
+
             # self._fps_clock.tick(self._fps)
             # draw white background
-            self._screen.color = self._GRAY  # Fill the screen gray
+            # self._screen.color = self._GRAY  # Fill the screen gray
 
             # draw point
             if not self._phase_adjust_position and not self._calibration_preparing and self._phase_calibration:

@@ -24,8 +24,7 @@ class CalibrationUI(object):
         # set deep gaze
         self._pupil_io = pupil_io
 
-        pygame.init()
-
+        # pygame.init()
         # set pygame window caption
         # pygame.display.set_caption('deep gaze calibration')
 
@@ -656,6 +655,9 @@ class CalibrationUI(object):
 
                     elif event.key == pygame.K_RETURN and self._phase_validation and self._drawing_validation_result:
                         self._phase_validation = False
+
+                    elif event.key == pygame.K_r and self._drawing_validation_result:
+                        self.draw(self._need_validation, bg_color=bg_color)
 
                     elif event.key == pygame.K_q:
                         self._exit = True

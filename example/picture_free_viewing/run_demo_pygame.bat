@@ -1,0 +1,2 @@
+python picture_viewing_pygame.py
+pause;
