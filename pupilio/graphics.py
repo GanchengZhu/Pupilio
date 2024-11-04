@@ -199,6 +199,7 @@ class CalibrationUI(object):
         self._hands_free_adjust_head_start_timestamp = 0
         self._validation_finished_timer = 0
 
+
     def _to_psychopy_coords(self, coords):
         """ convert a coords into the psychopy screen coords"""
 

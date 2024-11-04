@@ -31,8 +31,9 @@ class CustomBuildExt(build_ext):
         # Copy the DLL file to the build/lib/my_package/lib directory
         build_lib = os.path.join(self.build_lib, package_name, 'lib')
         os.makedirs(build_lib, exist_ok=True)
-        shutil.copy('pupilio/lib/DeepGazeET_Bk.dll', build_lib)
-        shutil.copy('pupilio/lib/libfilter.dll', build_lib)
+        shutil.copy('pupilio/lib/*.dll', build_lib)
+        # shutil.copy('pupilio/lib/libfilter.dll', build_lib)
+        # shutil.copy('pupilio/lib/PupilioET.dll', build_lib)
 
 
 from pupilio import version
