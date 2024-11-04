@@ -649,7 +649,9 @@ class CalibrationUI(object):
             elif ('esc' in _keys) or ('q' in _keys) or ('Q' in _keys):
                 self._exit = True
 
-            elif ('r' in _keys) and self._drawing_validation_result:
+            elif ('r' in _keys) and self._drawing_validation_result and self._phase_validation:
+                self._phase_validation = False
+                self._drawing_validation_result = False
                 if self._pupil_io._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:
                     raise Exception("Pupilio init failed, please contact the developer!")
                 self.draw(self._need_validation, bg_color=bg_color)

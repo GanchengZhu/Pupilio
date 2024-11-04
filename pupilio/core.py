@@ -400,7 +400,8 @@ class Pupilio:
             bg_color (tuple): Background color, specific parameter for pygame
             hands_free (bool): Whether to hands free
         """
-
+        from pygame import Surface
+        screen_type = ""
         if screen is None:
             try:
                 import pygame
@@ -408,25 +409,16 @@ class Pupilio:
                 pygame.init()
                 scn_width, scn_height = (1920, 1080)
                 screen = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN | HWSURFACE)
+                screen_type = 'pygame'
             except:
                 print("The parameter passed is None, creating a new pygame screen.")
                 raise Exception("pygame screen can't be created.")
-
-
-        screen_type = ""
-        try:
-            from pygame import Surface
-            if isinstance(screen, Surface):
-                screen_type = 'pygame'
-        except:
-            pass
-
-        try:
+        elif isinstance(screen, Surface):
+            screen_type = 'pygame'
+        else:
             from psychopy.visual import Window
             if isinstance(screen, Window):
                 screen_type = 'psychopy'
-        except:
-            pass
 
         if screen_type == "":
             raise Exception("Screen cannot be None. Please pass pygame window or psychopy window instance")
