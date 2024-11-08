@@ -1,9 +1,10 @@
 # Pupilio SDK Update Log
 
-## Version 1.1.5 (Build 1) - 2024-11-05
-- Need to fix recalibration
-- Improve calibration UI
-- Fix a bug that causes Python processes to hang indefinitely.
+## Version 1.1.5 (Build 1) - 2024-11-08
+- Fix recalibration issues.
+- Improve the calibration UI.
+- Resolve a bug causing Python processes to hang indefinitely.
+- Fix an issue where temporary sampling files may not fully write to disk, remaining in the buffer.
 
 ## Version 1.1.4 (Build 1) - 2024-11-04
 ### Changes:
