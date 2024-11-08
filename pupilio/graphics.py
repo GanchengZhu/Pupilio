@@ -199,7 +199,6 @@ class CalibrationUI(object):
         self._hands_free_adjust_head_start_timestamp = 0
         self._validation_finished_timer = 0
 
-
     def _to_psychopy_coords(self, coords):
         """ convert a coords into the psychopy screen coords"""
 
@@ -220,6 +219,7 @@ class CalibrationUI(object):
         # ground truth positoin, represented as a "+"
         self._txt.text = '+'
         self._txt.height = 24
+        self._txt.color = self._GREEN
         self._txt.pos = ground_truth_point
         self._txt.draw()
 
@@ -375,7 +375,7 @@ class CalibrationUI(object):
                             distances=_left_eye_distances
                         )
                         if _res:
-                            self._draw_error_line(_res["gt_point"], _res["min_error_es_point"], self._GREEN)
+                            self._draw_error_line(_res["gt_point"], _res["min_error_es_point"], self._CRIMSON)
                             self._draw_error_text(_res["min_error"], _res["min_error_es_point"], is_left=True)
                     if _right_samples:
                         _res = self._calculator.calculate_error_by_sliding_window(
@@ -384,7 +384,7 @@ class CalibrationUI(object):
                             distances=_right_eye_distances
                         )
                         if _res:
-                            self._draw_error_line(_res["gt_point"], _res["min_error_es_point"], self._BLUE)
+                            self._draw_error_line(_res["gt_point"], _res["min_error_es_point"], self._CORAL)
                             self._draw_error_text(_res["min_error"], _res["min_error_es_point"], is_left=False)
 
                     self._draw_legend()

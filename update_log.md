@@ -1,6 +1,11 @@
 # Pupilio SDK Update Log
 
-## Version 1.1.4 (Build 1) - 2024-11-02
+## Version 1.1.5 (Build 1) - 2024-11-05
+- Need to fix recalibration
+- Improve calibration UI
+- Fix a bug that causes Python processes to hang indefinitely.
+
+## Version 1.1.4 (Build 1) - 2024-11-04
 ### Changes:
 - Add create session name checking. The session name must contain only letters, digits or underscores without any special characters.
 - Delete resource deep gaze icon.
