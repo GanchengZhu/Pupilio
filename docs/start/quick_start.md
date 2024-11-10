@@ -3,7 +3,7 @@
 Currently, all eye trackers shipped with Pupilio are pre-configured with the necessary Pupilio Python packages. If we need to upgrade this package, please enter the following command in the command prompt or PowerShell window:
 
 ```bash
-pip install pupilio
+pip install -U pupilio
 ```
 
 Once Pupilio is installed, enter the following command in the command prompt or PowerShell window:
@@ -46,8 +46,8 @@ win = visual.Window((scn_width, scn_height), fullscr=True, units='pix')
 pupil_io = Pupilio()
 
 # create a task session, and set a session name 
-# If the session name contains spaces, 
-# it is recommended to replace them with underscores '_'.
+# The session name must contain only letters, 
+# digits or underscores without any special characters.
 pupil_io.create_session(session_name="quick_start")
 
 # calibration and validation (recommended)

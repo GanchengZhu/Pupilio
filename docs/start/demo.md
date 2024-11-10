@@ -61,7 +61,7 @@ win = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN|HWSURFACE)
 pupil_io = Pupilio()
 
 # create a task session, and set a session name
-# note that the "session name" will be used for logging by default
+# The session name must contain only letters, digits or underscores without any special characters.
 pupil_io.create_session(session_name="deepgaze_demo")
 
 # set 'validate' to True if you would like to verify the calibration results
@@ -183,7 +183,8 @@ win = visual.Window((scn_width, scn_height), fullscr=True, units='pix')
 pupil_io = Pupilio()
 
 # create a task session, and set a session name
-# note that the "session name" will be used for logging by default
+# The session name must contain only letters, 
+# digits or underscores without any special characters.
 pupil_io.create_session(session_name="deepgaze_demo")
 
 # set 'validate' to True if you would like to verify the calibration results

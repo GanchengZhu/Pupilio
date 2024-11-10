@@ -25,18 +25,18 @@ Pupilio is a lightweight Python package developed by Hangzhou Shenning Technolog
 | Head Box                 | 40 cm x 40 cm @ 70 cm                         |
 | Operation Range          | 50 - 90 cm                                    |
 | Gaze Signal Delay        | < 6 ms                                        |
-| Tracking Technology      | Neural Network                                |
+| Tracking Technology      | Neural Networks                               |
 | Dimension                | 32 cm x 45 cm x 20 cm                         |
 | Weight                   | 5 kg [Eye-tracker + Display + Compute Module] |
 | Operating System         | Windows 11                                    |
-| SDK                      | C/Python                                      |
+| SDK                      | C/C++/Python                                  |
 
 ## Installation
 
 Currently, all eye trackers shipped with Pupilio are pre-configured with the necessary Pupilio Python packages. If we need to upgrade this package, please enter the following command in the command prompt or PowerShell window:
 
 ```bash
-pip install pupilio
+pip install -U pupilio
 ```
 
 
@@ -61,9 +61,8 @@ from pupilio import Pupilio
 # instantiate a connection to the tracker
 pupil_io = Pupilio()
 
-# create a task session, and set a session name
-# If the session name contains spaces,
-# it is recommended to replace them with underscores '_'.
+# create a task session, and set a session name. 
+# The session name must contain only letters, digits or underscores without any special characters.
 pupil_io.create_session(session_name="quick_start")
 
 # calibration and validation (recommended)
