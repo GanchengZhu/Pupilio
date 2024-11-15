@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/GanchengZhu/Pupilio">
-    <img width="160" height="160" src="https://raw.githubusercontent.com/GanchengZhu/Pupilio/refs/heads/master/docs/_static/images/intro/pupilio.pdf">
+    <img width="160" height="160" src="https://raw.githubusercontent.com/GanchengZhu/Pupilio/master/docs/_static/images/intro/pupilio.pdf">
   </a>
 
   <h1>Pupilio</h1>
