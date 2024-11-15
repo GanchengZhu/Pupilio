@@ -3,8 +3,6 @@
     <img width="160" height="160" src="https://raw.githubusercontent.com/GanchengZhu/Pupilio/master/docs/_static/images/intro/pupilio.png">
   </a>
 
-  <h1>Pupilio</h1>
-
   <b>A pythonic library for Pupil.IO eye tracker</b><br/>
   <i>High-performance control, Flexible Integration, User-friendly Interface</i><br/>
 </div>
