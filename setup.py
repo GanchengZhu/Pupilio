@@ -46,7 +46,7 @@ setup(
     author="Pupilio",
     author_email="zhugc2016@gmail.com",
     description="Pupilio Library",
-    url="https://deep-gaze.com/sdk/python",
+    url="https://github.com/GanchengZhu/Pupilio",
     packages=find_packages(),
     long_description=open('README.md').read(),  # 或者使用其他文档文件
     long_description_content_type='text/markdown',  # 如果使用 Markdown 格式
