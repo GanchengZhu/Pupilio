@@ -2,4 +2,4 @@ from .core import Pupilio
 from .misc import EventType, ET_ReturnCode
 from .version import __version__
 
-print("pupilio version: ", __version__)
+print(f"pupilio version: {__version__} with ", end='')
