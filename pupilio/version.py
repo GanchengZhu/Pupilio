@@ -1,6 +1,6 @@
 _major_version = '1'
 _minor_version = '1'
-_patch_version = '7'
+_patch_version = '8'
 
 __version__ = f'{_major_version}.{_minor_version}.{_patch_version}'
 

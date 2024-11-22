@@ -1,8 +1,20 @@
 # Pupilio SDK Update Log
 
-## Version 1.1.5 (Build 1) - 2024-11-08
+## Version 1.1.8 (Build 1) - 2024-11-22
+- Added support for filter parameter: look_ahead.
+- Fixed issues with saving to paths containing Chinese characters.
+- Resolved UI problems in PsychoPy calibration.
+- Native library compiled statically with MSVC.
+- The valid field is set to -1 when no face is detected.
+- Simplified the DLL environment.
+- Added support for the PsychoPy GUI interface.
+- Added a timestamp to the session name to serve as a unique session ID.
+
+## Version 1.1.7 (Build 1) - 2024-11-15
 - Fix recalibration issues.
 - Improve the calibration UI.
+
+## Version 1.1.6 (Build 1) - 2024-11-08
 - Resolve a bug causing Python processes to hang indefinitely.
 - Fix an issue where temporary sampling files may not fully write to disk, remaining in the buffer.
 
@@ -21,8 +33,6 @@ example/picture_free_viewing/run_demo_pygame.bat.
 - Calibration PsychoPy components set units `pix`.
 - Press R to recalibrate.
 - Deleting pygame.init in graphics.py, this may cause minimizing pygame screen.
-
-
 
 ## Version 1.1.2 (Build 1) - 2024-10-28
 ### Changes:

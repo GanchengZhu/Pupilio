@@ -50,6 +50,10 @@ class CalibrationUI(object):
             self._error_text_font = pygame.font.Font(None, 18)
             self._instruction_font = pygame.font.Font(None, 24)
 
+        # set pygame clock
+        self._fps_clock = pygame.time.Clock()
+        self._fps = 60
+
         # constant colors
         self._BLACK = (0, 0, 0)
         self._RED = (255, 0, 0)
@@ -77,14 +81,14 @@ class CalibrationUI(object):
         self._beep_sound_path = os.path.join(self._current_dir, "asset", "beep.wav")
         self._calibration_instruction_sound_path = os.path.join(self._current_dir, "asset",
                                                                 "calibration_instruction.wav")
-        # 戴凯@2024/4/23
+
         self._adjust_position_sound_path = os.path.join(self._current_dir, "asset", "adjust_position.wav")
 
         # load audio files
         pygame.mixer.init()
         self._sound = pygame.mixer.Sound(self._beep_sound_path)
         self._cali_ins_sound = pygame.mixer.Sound(self._calibration_instruction_sound_path)
-        # 戴凯@2024/4/23
+
         self._just_pos_sound = pygame.mixer.Sound(self._adjust_position_sound_path)
 
         self._just_pos_sound_once = False
@@ -190,7 +194,6 @@ class CalibrationUI(object):
         self._calibration_point_index = 0
         self._drawing_validation_result = False
         self._hands_free = False
-        # daikai@20240423
         self._hands_free_adjust_head_wait_time = 12  # 3
         self._hands_free_adjust_head_start_timestamp = 0
         self._validation_finished_timer = 0
@@ -262,6 +265,21 @@ class CalibrationUI(object):
 
         # 将文本绘制到屏幕上
         self._screen.blit(text_surface, text_rect)
+
+    def _draw_recali_and_continue_tips(self):
+        legend_texts = ["Press \"R\" to recalibration", "Press \"Enter\" to continue"]
+        x = self._screen_width - 512
+        y = self._screen_height - 128
+
+        for n, content in enumerate(legend_texts):
+            content_text_surface = self._error_text_font.render(content, True, self._BLACK)
+            content_text_rect = content_text_surface.get_rect()
+            _x = x + content_text_rect.width // 2
+            content_text_rect.center = (_x, y)
+            # text_rect.center = (self._screen_width // 2 + n * text_rect.width, self._screen_height // 2)
+            self._screen.blit(content_text_surface, content_text_rect)
+            y += content_text_rect.height + 3
+
 
     def _draw_legend(self):
         legend_texts = ["Target", "Left eye gaze", "Right eye gaze"]
@@ -395,6 +413,7 @@ class CalibrationUI(object):
                                                   is_left=False)
 
                     self._draw_legend()
+                    self._draw_recali_and_continue_tips()
                     self._drawing_validation_result = True
 
         else:
@@ -659,15 +678,13 @@ class CalibrationUI(object):
                     elif event.key == pygame.K_r and self._drawing_validation_result:
                         self._phase_validation = False
                         self._drawing_validation_result = False
-                        if self._pupil_io._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:
-                            raise Exception("Pupilio init failed, please contact the developer!")
-
+                        self._pupil_io._et_native_lib.pupil_io_recalibrate()
                         self.draw(self._need_validation, bg_color=bg_color)
 
                     elif event.key == pygame.K_q:
                         self._exit = True
 
-            # self._fps_clock.tick(self._fps)
+            self._fps_clock.tick(self._fps)
             # draw white background
             self._screen.fill(bg_color)  # Fill white color
 

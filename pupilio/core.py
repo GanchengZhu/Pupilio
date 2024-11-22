@@ -4,7 +4,7 @@ import logging
 import os
 import platform
 import re
-import sys
+from datetime import datetime
 from typing import Callable, Tuple
 
 import numpy as np
@@ -17,7 +17,7 @@ class Pupilio:
     """Class for interacting with the eye tracker dynamic link library (DLL).
         A pythonic wrapper for Pupilio library."""
 
-    def __init__(self):
+    def __init__(self, look_ahead=2):
         """
         Initialize the Pupilio class.
         Load the appropriate DLL based on the platform (Windows or other).
@@ -40,7 +40,9 @@ class Pupilio:
 
         self._session_name = ""
         # Set return types
+        self._et_native_lib.pupil_io_set_look_ahead.restype = ctypes.c_int
         self._et_native_lib.pupil_io_init.restype = ctypes.c_int
+        self._et_native_lib.pupil_io_recalibrate.restype = ctypes.c_int
         self._et_native_lib.pupil_io_face_pos.restype = ctypes.c_int
         self._et_native_lib.pupil_io_cali.restype = ctypes.c_int
         self._et_native_lib.pupil_io_est.restype = ctypes.c_int
@@ -97,7 +99,12 @@ class Pupilio:
         ]
 
         version = self._et_native_lib.pupil_io_get_version()
-        print("Native Pupilio Version:", version.decode("utf-8"))
+        print("Native Pupilio Version:", version.decode("gbk"))
+
+        # set filter parameter: look ahead
+        self._et_native_lib.pupil_io_set_look_ahead(look_ahead)
+        print(f"set filter parameter: look ahead = {look_ahead}")
+
         # Initialize Pupilio, raise an exception if initialization fails
         if self._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:
             raise Exception("Pupilio init failed, please contact the developer!")
@@ -123,9 +130,8 @@ class Pupilio:
         try:
             ipaddress.ip_address(udp_host)
         except ValueError:
-            print(f"Invalid IP address: {udp_host}. Exiting.")
-            sys.exit(1)  # Exit the program with an error status
-        self._et_native_lib.pupil_io_previewer_init(udp_host.encode('utf-8'), udp_port)
+            raise Exception(f"Invalid IP address: {udp_host}.")
+        self._et_native_lib.pupil_io_previewer_init(udp_host.encode('gbk'), udp_port)
         self._et_native_lib.pupil_io_previewer_start()
 
     def previewer_stop(self):
@@ -139,15 +145,21 @@ class Pupilio:
 
     def create_session(self, session_name: str) -> int:
         """
-        Create a new session with the given name.
-        Sets up directories, log files, and logger for the session.
+        Creates a new session and sets up related directories, log files, and the logger.
 
         Args:
-            session_name: Name of the session. For defining logging files and temporary files.
-            The session name must contain only letters, digits or underscores without any special characters.
+            session_name: The name of the session, used to define log files and a temporary folder
+            for real-time storage of eye-tracking data.
+            It is recommended to make the session_name unique, so data can be recovered from the
+            temporary folder in case of loss. The session_name must only contain letters, digits,
+            or underscores without any special characters.
 
         Returns:
             int: ET_ReturnCode indicating the success or failure of session creation.
+
+        Notes:
+            1. The temporary folder is located at `/Pupilio/{session_name}_{time}` in the user's home directory.
+            2. If storage space runs out, you can delete this temporary folder to free up space.
         """
         self._session_name = session_name
         available_session = bool(re.fullmatch(r'^[a-zA-Z0-9_]+$', session_name))
@@ -155,7 +167,11 @@ class Pupilio:
             raise Exception(
                 f"Session name '{session_name}' is invalid. Ensure it includes only letters, digits, "
                 f"or underscores without any special characters.")
-        return self._et_native_lib.pupil_io_create_session(self._session_name.encode('utf-8'))
+
+        current_time = datetime.now()
+        formatted_current_time = current_time.strftime("%Y%m%d%H%M%S")
+        self._session_name += f"_{formatted_current_time}"
+        return self._et_native_lib.pupil_io_create_session(self._session_name.encode('gbk'))
 
     def save_data(self, path: str) -> int:
         """
@@ -170,15 +186,12 @@ class Pupilio:
         # Check if the directory exists and is writable
         directory = os.path.dirname(path)
 
-        if not os.path.exists(directory):
+        if not os.path.exists(directory) or not os.access(directory, os.W_OK):
             print(f"Directory does not exist: {directory}. Exiting.")
-            sys.exit(1)  # Exit the program with an error status
+            raise Exception("Data does not exist or not writeable.")
+            # sys.exit(1)  # Exit the program with an error status
 
-        if not os.access(directory, os.W_OK):
-            print(f"Directory is not writable: {directory}. Exiting.")
-            sys.exit(1)  # Exit the program with an error status
-
-        return self._et_native_lib.pupil_io_save_data_to(path.encode("utf-8"))
+        return self._et_native_lib.pupil_io_save_data_to(path.encode("gbk"))
 
     def start_sampling(self) -> int:
         """

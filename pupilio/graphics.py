@@ -252,6 +252,18 @@ class CalibrationUI(object):
         self._txt.color = self._BLACK
         self._txt.draw()
 
+    def _draw_recali_and_continue_tips(self):
+        legend_texts = ["Press \"R\" to recalibration", "Press \"Enter\" to continue"]
+
+        x = self._screen_width // 2 - 512
+        y = -self._screen_height // 2 + 128
+
+        for n, content in enumerate(legend_texts):
+            self._txt.text = legend_texts[n]
+            self._txt.height = 24
+            self._txt.pos = [x + self._txt.boundingBox[0] // 2, y - 36 * n]
+            self._txt.draw()
+
     def _draw_legend(self):
         legend_texts = ["+ Target", "+ Left eye gaze", "+ Right eye gaze"]
         color_list = [self._GREEN, self._CRIMSON, self._CORAL]
@@ -388,6 +400,7 @@ class CalibrationUI(object):
                             self._draw_error_text(_res["min_error"], _res["min_error_es_point"], is_left=False)
 
                     self._draw_legend()
+                    self._draw_recali_and_continue_tips()
                     self._drawing_validation_result = True
 
         # do the following if the validation process is not completed yet
@@ -613,7 +626,8 @@ class CalibrationUI(object):
             _h = self._clock_resource_dict['.'].get_height()
 
             for n, _character in enumerate(_rest):
-                # _x = _center_x - (3 - n) * _w
+                _center_x = self._screen_width // 2
+                _center_y = self._screen_height // 2
                 _x = _center_x - _w
                 _y = _center_y - 200
                 self._screen.blit(self._clock_resource_dict[_character], (_x + _w // 2, _y + _h // 2))
@@ -653,8 +667,9 @@ class CalibrationUI(object):
             elif ('r' in _keys) and self._drawing_validation_result and self._phase_validation:
                 self._phase_validation = False
                 self._drawing_validation_result = False
-                if self._pupil_io._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:
-                    raise Exception("Pupilio init failed, please contact the developer!")
+                self._txt.height = 32
+                self._txt.font = self._font
+                self._pupil_io._et_native_lib.pupil_io_recalibrate()
                 self.draw(self._need_validation, bg_color=bg_color)
 
             # self._fps_clock.tick(self._fps)
