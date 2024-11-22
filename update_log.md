@@ -1,6 +1,6 @@
 # Pupilio SDK Update Log
 
-## Version 1.1.8 (Build 1) - 2024-11-22
+## Version 1.2.0 (Build 1) - 2024-11-22
 - Added support for filter parameter: look_ahead.
 - Fixed issues with saving to paths containing Chinese characters.
 - Resolved UI problems in PsychoPy calibration.
@@ -9,6 +9,9 @@
 - Simplified the DLL environment.
 - Added support for the PsychoPy GUI interface.
 - Added a timestamp to the session name to serve as a unique session ID.
+- Prepare to add a config for controlling the behavior of the eye tracker.
+- More precision trigger sender.
+- Add LICENSE file.
 
 ## Version 1.1.7 (Build 1) - 2024-11-15
 - Fix recalibration issues.

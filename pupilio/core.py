@@ -10,6 +10,7 @@ from typing import Callable, Tuple
 import numpy as np
 
 from .annotation import deprecated
+from .default_config import DefaultConfig
 from .misc import ET_ReturnCode
 
 
@@ -17,7 +18,7 @@ class Pupilio:
     """Class for interacting with the eye tracker dynamic link library (DLL).
         A pythonic wrapper for Pupilio library."""
 
-    def __init__(self, look_ahead=2):
+    def __init__(self, config=None):
         """
         Initialize the Pupilio class.
         Load the appropriate DLL based on the platform (Windows or other).
@@ -25,12 +26,27 @@ class Pupilio:
         Initialize various attributes and start the sampling thread.
         """
 
+        """
+        user2:
+        config = DefaultConfig()
+        config.look_ahead = 2
+        pi = Pupilio(config=config)
+        
+        user1:
+        pi = Pupilio()
+        """
+
+        if config is None:
+            self.config = DefaultConfig()
+        else:
+            self.config = config
+
         # Determine the platform and load the appropriate DLL
         if platform.system().lower() == 'windows':
             _current_dir = os.path.abspath(os.path.dirname(__file__))
             _lib_dir = os.path.join(_current_dir, "lib")
             os.add_dll_directory(_lib_dir)
-            os.environ['PATH'] = _lib_dir + ';' + os.environ['PATH']
+            os.environ['PATH'] = os.environ['PATH'] + ';' + _lib_dir
             # dll
             _dll_path = os.path.join(_lib_dir, 'PupilioET.dll')
             self._et_native_lib = ctypes.CDLL(_dll_path, winmode=0)
@@ -102,6 +118,7 @@ class Pupilio:
         print("Native Pupilio Version:", version.decode("gbk"))
 
         # set filter parameter: look ahead
+        look_ahead = 2
         self._et_native_lib.pupil_io_set_look_ahead(look_ahead)
         print(f"set filter parameter: look ahead = {look_ahead}")
 
