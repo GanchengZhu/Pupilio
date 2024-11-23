@@ -1,3 +1,7 @@
+numpy
+websockets
+pygame
+opencv-python
 sphinx
 recommonmark
 sphinx_markdown_tables

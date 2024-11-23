@@ -191,4 +191,3 @@ Releases resources and performs cleanup when the program exits.
 
 +   `ET_SUCCESS` on successful release.
 +   Other `ET_ReturnCode` values indicate failure or special conditions.
-
