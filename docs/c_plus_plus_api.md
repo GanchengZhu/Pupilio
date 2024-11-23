@@ -191,3 +191,115 @@ Releases resources and performs cleanup when the program exits.
 
 +   `ET_SUCCESS` on successful release.
 +   Other `ET_ReturnCode` values indicate failure or special conditions.
+
+## `deep_gaze_get_version`
+
+```cpp
+const char *deep_gaze_get_version();
+```
+
+**Description:**
+
+Retrieves the version information of the Deep Gaze library.
+
+**Returns:**
+
++   A const char* representing the version string of the library.
+
+## `deep_gaze_set_look_ahead`
+
+```cpp
+ET_ReturnCode deep_gaze_set_look_ahead(int look_ahead);
+```
+
+**Description:**
+
+Sets the look-ahead parameter, which defines the number of future frames the system considers for gaze estimation.
+
+**Parameters:**
+
++   `look_ahead`: An integer specifying the number of frames to look ahead.
+
+**Returns:**
+
++   `ET_SUCCESS` on successful parameter update. Other ET_ReturnCode values indicate failure or invalid input.
+
+## `deep_gaze_set_log`
+
+```cpp
+ET_ReturnCode deep_gaze_set_log(int valid, char *log_Path);
+```
+
+**Description:**
+
+Configures logging for the Deep Gaze library.
+
+**Parameters:**
+
++   `valid`: An integer indicating whether logging is enabled (1 for enabled, 0 for disabled).
+log_Path: A pointer to a character array specifying the path to the log file.
+
+**Returns:**
+
++   `ET_SUCCESS` on successful log configuration.
+Other ET_ReturnCode values indicate failure or invalid parameters.
+
+
+## `deep_gaze_recalibrate`
+
+```cpp
+ET_ReturnCode deep_gaze_recalibrate();
+```
+
+**Description:**
+
+Triggers recalibration of the gaze tracking system to improve accuracy.
+
+**Returns:**
+
++   `ET_SUCCESS` if recalibration is completed successfully.
+Other ET_ReturnCode values indicate failure or an inability to recalibrate.
+
+## `deep_gaze_face_image`
+
+```cpp
+ET_ReturnCode deep_gaze_face_image(char **image_data, int *width, int *height);
+```
+
+**Description:**
+
+Provides the current face image data being processed by the gaze tracking system.
+
+**Parameters:**
+
++   `image_data`: A double pointer to hold the address of the image data buffer.
+width: A pointer to an integer to store the width of the image.
+height: A pointer to an integer to store the height of the image.
+Returns:
+
+**Returns:**
+
++   `ET_SUCCESS` on successful retrieval of face image data.
+Other ET_ReturnCode values indicate failure or lack of image data.
+
+
+## `deep_gaze_set_cali_mode`
+
+```cpp
+ET_ReturnCode deep_gaze_set_cali_mode(int mode, float *cali_points);
+```
+
+**Description:**
+
+Sets the calibration mode and points for gaze tracking.
+
+**Parameters:**
+
++   `mode`: An integer representing the calibration mode.
+cali_points: A pointer to an array of floats representing calibration points.
+Returns:
+
+**Returns:**
+
++   `ET_SUCCESS` on successful calibration mode configuration.
+Other ET_ReturnCode values indicate failure or invalid input
