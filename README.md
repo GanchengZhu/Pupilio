@@ -24,6 +24,7 @@ Pupilio is a lightweight Python package developed by Hangzhou Shenning Technolog
   <a href="https://raw.githubusercontent.com/GanchengZhu/Pupilio/refs/heads/master/docs/_static/images/intro/about/banner.png">
     <img width="390" height="351" src="https://raw.githubusercontent.com/GanchengZhu/Pupilio/refs/heads/master/docs/_static/images/intro/about/banner.png">
   </a>
+<br/>
 </div>
 
 [Pupil.IO](https://www.deep-gaze.com/) is a high-performance, high-speed, and high-precision eye-tracking system designed by Hangzhou Shenning Technology Co., Ltd. It offers high sampling rates and precise eye movement data, making it a valuable tool for scientific and clinical applications.
