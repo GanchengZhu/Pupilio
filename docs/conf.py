@@ -16,7 +16,7 @@ from recommonmark.transform import AutoStructify
 project = 'Pupilio Documentation'
 copyright = '2024, Pupilio'
 author = 'Pupilio'
-release = '1.1.0'
+release = '1.2.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
