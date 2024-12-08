@@ -4,6 +4,7 @@ import logging
 import os
 import platform
 import re
+import time
 from datetime import datetime
 from typing import Callable, Tuple
 
@@ -118,9 +119,7 @@ class Pupilio:
         print("Native Pupilio Version:", version.decode("gbk"))
 
         # set filter parameter: look ahead
-        look_ahead = 2
-        self._et_native_lib.pupil_io_set_look_ahead(look_ahead)
-        print(f"set filter parameter: look ahead = {look_ahead}")
+        self._et_native_lib.pupil_io_set_look_ahead(self.config.look_ahead)
 
         # Initialize Pupilio, raise an exception if initialization fails
         if self._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:
@@ -179,11 +178,22 @@ class Pupilio:
             2. If storage space runs out, you can delete this temporary folder to free up space.
         """
         self._session_name = session_name
-        available_session = bool(re.fullmatch(r'^[a-zA-Z0-9_]+$', session_name))
+
+        # List of reserved names for Windows
+        reserved_names = {
+            "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+        }
+
+        pattern = r'^[a-zA-Z0-9_+\-()]+$'
+        available_session = bool(re.fullmatch(pattern, session_name) and (session_name.upper() not in reserved_names))
         if not available_session:
             raise Exception(
-                f"Session name '{session_name}' is invalid. Ensure it includes only letters, digits, "
-                f"or underscores without any special characters.")
+                f"Session name '{session_name}' is invalid. Ensure it follows these rules:\n"
+                f"1. Only includes letters (A-Z, a-z), digits (0-9), underscores (_), hyphens (-), plus signs (+), and parentheses ().\n"
+                f"2. Does not include any of the following prohibited characters: < > : \" / \\ | ? *.\n"
+                f"3. Does not match any of the following reserved names: {', '.join(reserved_names)}."
+            )
 
         current_time = datetime.now()
         formatted_current_time = current_time.strftime("%Y%m%d%H%M%S")
@@ -218,7 +228,9 @@ class Pupilio:
             int: Return code indicating success or failure.
         """
         # Lock to ensure thread safety while modifying sampling status
-        return self._et_native_lib.pupil_io_start_sampling()
+        res = self._et_native_lib.pupil_io_start_sampling()
+        time.sleep(0.05)
+        return res
 
     def get_sampling_status(self) -> bool:
         """
@@ -246,7 +258,9 @@ class Pupilio:
         Returns:
             int: Return code indicating success or failure.
         """
-        return self._et_native_lib.pupil_io_stop_sampling()
+        res = self._et_native_lib.pupil_io_stop_sampling()
+        time.sleep(0.1)
+        return res
 
     def face_position(self) -> Tuple[int, np.ndarray]:
         """

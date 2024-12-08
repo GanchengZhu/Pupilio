@@ -1,8 +1,6 @@
 import copy
-import json
 import logging
 import math
-import pathlib
 import threading  # Importing the threading module for creating locks
 from collections import deque
 from enum import Enum, unique
@@ -40,6 +38,12 @@ class ET_ReturnCode(IntEnum):
     ET_CALI_CONTINUE = 1  # Calibration ongoing, continue with current calibration point
     ET_CALI_NEXT_POINT = 2  # Calibration ongoing, switch to next calibration point
     ET_FAILED = 9  # Operation failed
+
+
+class CalibrationMode(IntEnum):
+    """Enum representing calibration modes"""
+    TWO_POINTS = 2
+    FIVE_POINTS = 5
 
 
 class TriggerHandler:

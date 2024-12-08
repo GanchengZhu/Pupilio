@@ -15,6 +15,7 @@ import numpy as np
 from psychopy import visual, sound, event
 
 from .annotation import deprecated
+from .default_config import CalibrationMode
 from .misc import ET_ReturnCode, LocalConfig, Calculator
 
 
@@ -43,9 +44,16 @@ class CalibrationUI(object):
         self.error_color = self._RED
 
         # constant calibration points
-        self._calibrationPoint = [
-            (576, 540), (1344, 540)
-        ]
+        if self._pupil_io.config.cali_mode == CalibrationMode.TWO_POINTS:
+            self._calibrationPoint = [
+                (576, 540), (1344, 540)
+            ]
+        else:
+            # TODO
+            print("[WARNING] It will work in the next version")
+            self._calibrationPoint = [
+                (576, 540), (1344, 540)
+            ]
 
         # initialize a psychopy window
         self._screen = screen
@@ -58,10 +66,6 @@ class CalibrationUI(object):
         #     fullscr=True,
         #     color=self._GRAY,
         #     units='pix')
-
-        # constant calibration stuffs
-        self._target_size = 16
-        self._inner_circle_size = 9
 
         # headbox to show the relative position of the head
         self._face_in_rect = visual.Rect(self._screen, size=600, lineWidth=5, units='pix')
@@ -86,7 +90,7 @@ class CalibrationUI(object):
 
         # audio instructions
         # a beep that goes with the calibration target
-        self._sound = sound.Sound(os.path.join(self._current_dir, "asset", "beep.wav"))
+        self._sound = sound.Sound(self._pupil_io.config.cali_target_beep)
         # calibration instructions
         self._cali_ins_sound = sound.Sound(
             os.path.join(self._current_dir, "asset", "calibration_instruction.wav"))
@@ -102,11 +106,11 @@ class CalibrationUI(object):
         # load face image to show head pose
         self._frowning_face = visual.ImageStim(
             win=self._screen,
-            image=os.path.join(self._current_dir, "asset", "frowning-face.png"), units='pix')
+            image=self._pupil_io.config.cali_frowning_face_img, units='pix')
 
         self._smiling_face = visual.ImageStim(
             win=self._screen,
-            image=os.path.join(self._current_dir, "asset", "smiling-face.png"), units='pix')
+            image=self._pupil_io.config.cali_smiling_face_img, units='pix')
 
         # clock counter
         self._clock_resource_dict = {}
@@ -154,7 +158,8 @@ class CalibrationUI(object):
              int((_point[1] - 0.5) * self._screen_height)] for _point in self._validation_points]
 
         # image resource for calibration and validation points
-        _max_size, _min_size = 60, 20
+        _max_size, _min_size = (self._pupil_io.config.cali_target_img_maximum_size,
+                                self._pupil_io.config.cali_target_img_minimum_size)
         self._animation_size = [
             (_min_size + (_max_size - _min_size) * i / 19, _min_size + (_max_size - _min_size) * i / 19)
             for i in range(20)]
@@ -162,7 +167,7 @@ class CalibrationUI(object):
         for i in range(10):
             _source_image = visual.ImageStim(
                 self._screen,
-                os.path.join(self._current_dir, "asset", "windmill.png"), units='pix')
+                self._pupil_io.config.cali_target_img, units='pix')
             _source_image.size = self._animation_size[i]
             _source_image.ori = 40 * i * 0
             self._animation_list.append(_source_image)
@@ -171,7 +176,7 @@ class CalibrationUI(object):
         self.initialize_variables()
 
         # animation frequency
-        self._animation_frequency = 2
+        self._animation_frequency = self._pupil_io.config.cali_target_animation_frequency
 
     def initialize_variables(self):
         """Initialize variables for plotting and visualization."""
@@ -278,7 +283,7 @@ class CalibrationUI(object):
             self._txt.pos = [x + self._txt.boundingBox[0] // 2, y - 36 * n]
             self._txt.draw()
 
-    def _recalibration(self):
+    def _repeat_calibration_point(self):
         """repeat a validation position, if the gaze error was large or too few samples
         have been collected there"""
 
@@ -338,7 +343,7 @@ class CalibrationUI(object):
         if not self._calibration_drawing_list:
             # whether we have bad validation points to repeat
             if self._n_validation == 1:
-                self._recalibration()
+                self._repeat_calibration_point()
             else:
                 # wait for 3 seconds when the validation process is completed
                 # in the hands_free mode
@@ -680,7 +685,6 @@ class CalibrationUI(object):
             if not self._phase_adjust_position and not self._calibration_preparing and self._phase_calibration:
                 self._draw_calibration_point()
             elif self._calibration_preparing:
-                # pygame.draw.circle(self._screen, self._RED, (0, 0), self._target_size, self._inner_circle_size)
                 self._draw_calibration_preparing()
             elif self._validation_preparing:
                 self._draw_validation_preparing()
@@ -715,7 +719,6 @@ class CalibrationUI(object):
             if self._phase_calibration:
                 self._draw_calibration_point()
             elif self._calibration_preparing:
-                # pygame.draw.circle(self._screen, self._RED, (0, 0), self._target_size, self._inner_circle_size)
                 self._draw_calibration_preparing_hands_free()
             # elif self._validation_preparing:
             #     self._draw_validation_preparing_hands_free()

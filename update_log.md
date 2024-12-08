@@ -1,5 +1,12 @@
 # Pupilio SDK Update Log
 
+## Version 1.2.1 (Build 1) - 2024-12-08
+- Fixed video playback stuttering caused by the OpenCV library.
+- Fixed minor issues with PupilioET.
+- Added configuration for Pupilio (major update).
+- Removed msvcp120.dll, msvcr120.dll.
+- Added three demos: preview demo, custom configuration demo, and previewer demo.
+
 ## Version 1.2.0 (Build 1) - 2024-11-22
 - Added support for filter parameter: look_ahead.
 - Fixed issues with saving to paths containing Chinese characters.

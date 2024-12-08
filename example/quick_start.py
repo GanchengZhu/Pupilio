@@ -13,8 +13,7 @@ win = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN|HWSURFACE)
 from pupilio import Pupilio
 
 # instantiate a connection to the tracker
-# set filter parameter: look_ahead
-pupil_io = Pupilio(look_ahead=2)
+pupil_io = Pupilio()
 
 # create a task session, and set a session name
 # If the session name contains spaces,
