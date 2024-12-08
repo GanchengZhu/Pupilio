@@ -7,6 +7,7 @@
 - Removed `msvcp120.dll`, `msvcr120.dll`.
 - Added three demos: preview demo, custom configuration demo, and previewer demo.
 - Fix a bug when user calls `save_data` function passing a file name without directory.
+- Improve calibration UI
 
 ## Version 1.2.0 (Build 1) - 2024-11-22
 - Added support for filter parameter: look_ahead.
