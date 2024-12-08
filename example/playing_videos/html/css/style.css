@@ -1,0 +1,144 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full screen height */
+}
+
+h1 {
+    margin: 0;
+    font-size: 36px;
+    position: fixed;
+    top: 50px; /* Fixed 64px from the top */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    text-align: center;
+}
+
+.button-container {
+    display: grid;
+    height: 70%;
+    grid-template-columns: repeat(5, 1fr);
+    justify-content: center;
+    gap: 30px;
+    margin-top: 180px; /* Leave space for h1 */
+    margin-left: 100px;
+    margin-right: 100px;
+    flex-grow: 1; /* Let the button container take remaining space */
+    padding: 0 20px; /* Padding for left and right */
+    overflow-y: auto; /* Scrollable if buttons overflow */
+}
+
+
+.button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: #ffffff;
+    color: #000000;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.button:hover {
+    background-color: #58a45a;
+    color: #ffffff;
+}
+
+.button img {
+    width: 200px;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+/*.button:hover img {*/
+/*    content: url('../img/homeIconFocus.png');*/
+/*}*/
+
+/* 按钮文本样式 */
+.button .button-text {
+    font-size: 16px;
+    margin-top: 5px;
+    transition: color 0.3s ease;
+    text-align: center;  /* 确保文本水平居中 */
+}
+
+/* 按钮文本 hover */
+.button:hover .button-text {
+    color: #ffffff;
+}
+
+
+.button-selected {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: #58a45a;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.button-selected img {
+    width: 200px;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+/*.button-selected img {*/
+/*    content: url('../img/homeIconFocus.png');*/
+/*}*/
+
+.button-text-selected {
+    color: #ffffff;
+    font-size: 16px;
+    margin-top: 5px;
+}
+
+/* Fixed position buttons */
+.next-button,
+.exit-button {
+    width: 200px;
+    height: 64px;
+    position: fixed;
+    bottom: 50px; /* Fixed 64px from the bottom */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 24px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.next-button {
+    background-color: #0056b3;
+    color: #ffffff;
+    left: 30%;
+    transform: translateX(-50%);
+}
+
+.next-button:hover {
+    background-color: #003366;
+}
+
+.exit-button {
+    background-color: #cb4444;
+    color: #ffffff;
+    left: 70%;
+    transform: translateX(-50%);
+}
+
+.exit-button:hover {
+    background-color: #6c0404;
+}

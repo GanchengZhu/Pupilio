@@ -105,11 +105,11 @@ class CalibrationUI(object):
 
         # load face image to show head pose
         self._frowning_face = visual.ImageStim(
-            win=self._screen,
+            win=self._screen, size=(128, 128),
             image=self._pupil_io.config.cali_frowning_face_img, units='pix')
 
         self._smiling_face = visual.ImageStim(
-            win=self._screen,
+            win=self._screen, size=(128, 128),
             image=self._pupil_io.config.cali_smiling_face_img, units='pix')
 
         # clock counter
@@ -243,17 +243,16 @@ class CalibrationUI(object):
 
     def _draw_error_text(self, gaze_error, ground_truth_point, is_left=True):
         """show the gaze error in texts"""
-
-        ground_truth_point = self._to_psychopy_coords(ground_truth_point)
-
         # format the error message
         if is_left:
             error_text = f"L: {gaze_error:.2f}°"
+            _new_text_pos = [ground_truth_point[0], ground_truth_point[1] + self._txt.height]
         else:
             error_text = f"R: {gaze_error:.2f}°"
+            _new_text_pos = [ground_truth_point[0], ground_truth_point[1] + self._txt.height * 2.2]
 
         self._txt.text = error_text
-        self._txt.pos = [ground_truth_point[0], ground_truth_point[1] + self._txt.height]
+        self._txt.pos = self._to_psychopy_coords(_new_text_pos)
         self._txt.color = self._BLACK
         self._txt.draw()
 
@@ -265,23 +264,34 @@ class CalibrationUI(object):
 
         for n, content in enumerate(legend_texts):
             self._txt.text = legend_texts[n]
+            self._txt.color = "black"
             self._txt.height = 24
             self._txt.pos = [x + self._txt.boundingBox[0] // 2, y - 36 * n]
             self._txt.draw()
 
     def _draw_legend(self):
-        legend_texts = ["+ Target", "+ Left eye gaze", "+ Right eye gaze"]
+        legend_texts = ["+   Target", "+   Left eye gaze", "+   Right eye gaze"]
         color_list = [self._GREEN, self._CRIMSON, self._CORAL]
         x = -self._screen_width // 2 + 128
         y = -self._screen_height // 2 + 128
 
         for n, content in enumerate(legend_texts):
-            self._txt.text = legend_texts[n]
+            # draw colored fixation
+            self._txt.text = legend_texts[n][0]
             self._txt.height = 24
             self._txt.color = color_list[n]
             # print(self._txt.boundingBox)
             self._txt.pos = [x + self._txt.boundingBox[0] // 2, y - 36 * n]
             self._txt.draw()
+
+            # draw black text
+            self._txt.text = legend_texts[n][1:]
+            self._txt.height = 24
+            self._txt.color = "black"
+            # print(self._txt.boundingBox)
+            self._txt.pos = [x + self._txt.boundingBox[0] // 2 , y - 36 * n]
+            self._txt.draw()
+
 
     def _repeat_calibration_point(self):
         """repeat a validation position, if the gaze error was large or too few samples
@@ -393,7 +403,7 @@ class CalibrationUI(object):
                         )
                         if _res:
                             self._draw_error_line(_res["gt_point"], _res["min_error_es_point"], self._CRIMSON)
-                            self._draw_error_text(_res["min_error"], _res["min_error_es_point"], is_left=True)
+                            self._draw_error_text(_res["min_error"],_res["gt_point"], is_left=True)
                     if _right_samples:
                         _res = self._calculator.calculate_error_by_sliding_window(
                             gt_point=_ground_truth_point,
@@ -402,7 +412,7 @@ class CalibrationUI(object):
                         )
                         if _res:
                             self._draw_error_line(_res["gt_point"], _res["min_error_es_point"], self._CORAL)
-                            self._draw_error_text(_res["min_error"], _res["min_error_es_point"], is_left=False)
+                            self._draw_error_text(_res["min_error"], _res["gt_point"], is_left=False)
 
                     self._draw_legend()
                     self._draw_recali_and_continue_tips()
@@ -424,6 +434,8 @@ class CalibrationUI(object):
                     self._n_validation += 1  # 检查是否重新进行校准
                 else:
                     logging.info("Validation point index: " + str(self._calibration_drawing_list[-1]))
+                # stop the sound
+                self._sound.stop()
 
             else:
                 _pos_idx = self._calibration_drawing_list[-1]
@@ -432,7 +444,7 @@ class CalibrationUI(object):
 
                 self._draw_animation(point=_point, time_elapsed=_time_elapsed)
 
-                if 0.0 < _time_elapsed <= 3.0:
+                if 0.0 < _time_elapsed <= 1.5:
                     # face_status, face_position = self._pupil_io.face_position()
                     _left_sample = _left_sample.tolist()
                     _right_sample = _right_sample.tolist()
@@ -488,6 +500,8 @@ class CalibrationUI(object):
             else:
                 self._exit = True
                 self.graphics_finished = True
+
+            self._sound.stop()
 
         _point = self._calibrationPoint[self._calibration_point_index]
         self._draw_animation(
@@ -565,6 +579,7 @@ class CalibrationUI(object):
             # pygame.draw.circle(self._screen, _face_point_color, (int(_eyebrow_center_point[0]),
             #                                                      int(_eyebrow_center_point[1])), 50)
             _face.pos = (int(_eyebrow_center_point[0]), int(_eyebrow_center_point[1]))
+            _face.size = (_face_w, _face_h)
             _face.draw()
 
         # _instruction_text = u" "

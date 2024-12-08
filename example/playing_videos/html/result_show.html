@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Screen</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #FFFFFF;
+        }
+
+        /*.loading-text {*/
+        /*    text-align: center;*/
+        /*}*/
+
+        .loading-screen {
+            margin-left: 20px;
+            text-align: center;
+        }
+
+        .loading-text {
+            margin-left: 35px;
+            margin-top: 40px;
+            font-size: 28px;
+            color: #333;
+            display: none;
+        }
+
+        #animation {
+            margin-left: 45px;
+            width: 250px;
+            height: 250px;
+            display: none;
+        }
+
+        .result-img {
+            display: none;
+            -webkit-user-select: none;
+            margin: auto;
+            cursor: zoom-in;
+            background-color: hsl(0, 0%, 90%);
+            transition: background-color 300ms;
+            overflow-clip-margin: content-box;
+            overflow: clip;
+            /*overflow-x: ;*/
+            /*overflow-y: ;*/
+        }
+
+
+        button {
+            width: 200px;
+            height: 64px;
+            padding: 10px 20px;
+            background-color: #cb4444;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 24px;
+            transition: background-color 0.3s, color 0.3s;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 20px; /* 调整按钮与屏幕底部的距离 */
+            display: none;
+        }
+
+        button:hover {
+            background-color: #6c0404;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            max-width: 750px; /* 设置图片最大宽度，根据需要调整 */
+            margin: 0 auto;
+            display: none;
+        }
+
+        .result-img {
+            display: block;
+            width: 100%;
+            height: auto;
+            -webkit-user-select: none;
+            margin: auto;
+            cursor: pointer;
+            background-color: hsl(0, 0%, 90%);
+            transition: background-color 300ms;
+            overflow: hidden;
+        }
+
+        .result-img.zoomed {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            width: auto;
+            max-height: 90vh; /* 控制最大高度，根据需要调整 */
+            max-width: 90vw; /* 控制最大宽度，根据需要调整 */
+            cursor: zoom-out;
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="loading-screen">
+    <div id="animation"></div>
+    <div class="loading-text">正在测评，请稍后...</div>
+
+    <div class="image-container">
+        <img src="" class="result-img" alt="img_show.jpg">
+    </div>
+
+    <div class="button-container">
+        <button id="button" onclick="pywebview.api.quit_all()">退出</button>
+    </div>
+</div>
+
+<script src="js/lottie.min.js"></script>
+<script>
+    const animationPath = 'loading_animation.json';
+    // 获取元素
+    var animation = document.getElementById('animation');
+    var loadingText = document.querySelector('.loading-text');
+    var resultImg = document.querySelector('.image-container img');
+    var resultImgDiv = document.querySelector('.image-container');
+    var exitButton = document.getElementById("button")
+
+    // 点击图片时切换缩放状态
+    resultImg.addEventListener('click', function () {
+        // 切换图片容器的类名，实现缩放效果
+        resultImgDiv.classList.toggle('zoomed');
+    });
+
+    setTimeout(function () {
+        animation.style.display = 'block';
+        loadingText.style.display = 'block';
+        exitButton.style.display = 'block';
+    }, 1000 * 10);
+
+    const animData = {
+        container: document.getElementById('animation'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: false,
+        path: animationPath
+    };
+
+
+    const anim = lottie.loadAnimation(animData);
+    let progress = 0;
+    let autoplay = false;
+
+    function showImage() {
+        if (progress < 100) {
+            if (!autoplay) {
+                clearInterval(intervalID);
+                anim.play();
+                autoplay = true;
+            }
+            setProgress();
+            requestAnimationFrame(showImage)
+            return;
+        }
+
+        // 隐藏动画和加载文本，显示结果图像
+
+        resultImg.style.display = 'block';
+        resultImgDiv.style.display = 'block';
+        animation.style.display = 'none';
+        loadingText.style.display = 'none';
+        // 加载图片
+        resultImg.src = 'img_show.jpg';
+    }
+
+    function setProgress() {
+        var totalFrames = anim.totalFrames;
+        if (progress < 100) {
+            progress += 1;
+            // console.log(percent);
+            let frame = Math.floor(totalFrames * (progress / 100.0));
+            console.log(frame);
+            anim.goToAndStop(frame, true);
+        } else if (progress === 99) {
+            progress += 1;
+            console.log(percent);
+            anim.goToAndStop(totalFrames - 1, true);
+        }
+    }
+
+    var intervalID;
+
+    function startAnalysis() {
+        intervalID = setInterval(function () {
+            setProgress();
+        }, 300);
+    }
+
+    // updateProgress();
+</script>
+</body>
+</html>

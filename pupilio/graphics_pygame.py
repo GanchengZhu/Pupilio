@@ -66,7 +66,6 @@ class CalibrationUI(object):
         self._GRAY = (128, 128, 128)
 
         # constant calibration points
-        # constant calibration points
         if self._pupil_io.config.cali_mode == CalibrationMode.TWO_POINTS:
             self._calibrationPoint = [
                 (576, 540), (1344, 540)
@@ -107,8 +106,8 @@ class CalibrationUI(object):
         pygame.mouse.set_visible(False)
 
         # load face image
-        self._frowning_face = self._pupil_io.config.cali_frowning_face_img
-        self._smiling_face = self._pupil_io.config.cali_smiling_face_img
+        self._frowning_face = pygame.image.load(self._pupil_io.config.cali_frowning_face_img)
+        self._smiling_face = pygame.image.load(self._pupil_io.config.cali_smiling_face_img)
 
         # constant animation frequency (times per second)
         self._animation_frequency = self._pupil_io.config.cali_target_animation_frequency
@@ -425,6 +424,7 @@ class CalibrationUI(object):
         else:
             # initial for each point
             if self._validation_timer == 0:
+                self._sound.stop()
                 self._sound.play()
                 self._validation_timer = time.time()
 
@@ -436,6 +436,8 @@ class CalibrationUI(object):
                     self._n_validation += 1  # 检查是否重新进行校准
                 else:
                     logging.info("Validation point index: " + str(self._calibration_drawing_list[-1]))
+                # stop the sound
+                self._sound.stop()
 
             else:
                 _point = self._validation_points[self._calibration_drawing_list[-1]]
@@ -479,6 +481,7 @@ class CalibrationUI(object):
 
     def _draw_calibration_point(self):
         if self._calibration_timer == 0:
+            self._sound.stop()
             self._sound.play()
             self._calibration_timer = time.time()
 
@@ -490,6 +493,7 @@ class CalibrationUI(object):
         elif _status == ET_ReturnCode.ET_CALI_NEXT_POINT.value:
             self._calibration_point_index += 1
             self._calibration_timer = 0
+            self._sound.stop()
             self._sound.play()
         elif _status == ET_ReturnCode.ET_SUCCESS.value:
             self._phase_calibration = False
@@ -504,6 +508,9 @@ class CalibrationUI(object):
             else:
                 self._exit = True
                 self.graphics_finished = True
+
+            # stop the sound
+            self._sound.stop()
 
         _point = self._calibrationPoint[self._calibration_point_index]
         self._draw_animation(point=_point, time_elapsed=_time_elapsed)
@@ -750,3 +757,6 @@ class CalibrationUI(object):
 
             pygame.display.flip()
         self._sound.stop()
+        self._cali_ins_sound.stop()
+        self._just_pos_sound.stop()
+

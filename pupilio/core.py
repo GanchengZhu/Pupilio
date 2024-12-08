@@ -28,12 +28,12 @@ class Pupilio:
         """
 
         """
-        user2:
+        usage 1:
         config = DefaultConfig()
         config.look_ahead = 2
         pi = Pupilio(config=config)
         
-        user1:
+        usage 2:
         pi = Pupilio()
         """
 
@@ -213,9 +213,11 @@ class Pupilio:
         # Check if the directory exists and is writable
         directory = os.path.dirname(path)
 
-        if not os.path.exists(directory) or not os.access(directory, os.W_OK):
-            print(f"Directory does not exist: {directory}. Exiting.")
-            raise Exception("Data does not exist or not writeable.")
+        if directory and (not os.path.exists(directory)):
+            raise Exception("The directory of data file not exist.")
+
+        if directory and not os.access(directory, os.W_OK):
+            raise Exception("The directory of data file is not writeable.")
             # sys.exit(1)  # Exit the program with an error status
 
         return self._et_native_lib.pupil_io_save_data_to(path.encode("gbk"))
@@ -372,7 +374,7 @@ class Pupilio:
         Returns:
             int: ET_ReturnCode.ET_SUCCESS if successful.
         """
-        logging.info("release deep gaze")
+        # logging.info("release deep gaze")
         return_code = self._et_native_lib.pupil_io_release()
 
         # if platform.system().lower() == 'windows':
@@ -434,7 +436,7 @@ class Pupilio:
         # Return the gaze values as a NumPy array
         return left_gaze, right_gaze, bino_gaze
 
-    def calibration_draw(self, screen=None, validate=False, bg_color=(255, 255, 255), hands_free=True):
+    def calibration_draw(self, screen=None, validate=False, bg_color=(255, 255, 255), hands_free=False):
         """
         Draw the indicator of the face distance and the eyebrow center position.
         Draw the calibration UI.

@@ -9,6 +9,10 @@ docs/build
 pupilio/__pycache__
 example/data
 example/picture_free_viewing/data
+example/picture_free_viewing/log_et
 example/html
 example/log_et
 docs/workflow.pptx
+example/custom_config/calibration
+example/custom_config/log_et
+example/custom_config/eye_movement.csv
