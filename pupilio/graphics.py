@@ -1,22 +1,36 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+# _*_ coding: utf-8 _*_
+# Copyright (c) 2024, Hangzhou Deep Gaze Sci & Tech Ltd
+# All Rights Reserved
+#
+# For use by  Hangzhou Deep Gaze Sci & Tech Ltd licencees only.
+# Redistribution and use in source and binary forms, with or without
+# modification, are NOT permitted.
+#
+# Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in
+# the documentation and/or other materials provided with the distribution.
+#
+# Neither name of  Hangzhou Deep Gaze Sci & Tech Ltd nor the name of
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
+# IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# DESCRIPTION:
+# This demo shows how to configure the calibration process
+
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
-import json
-import logging
-import math
-import os
-import random
-import time
-from datetime import datetime
-from pathlib import Path
-
-import numpy as np
-from psychopy import visual, sound, event
-
-from .annotation import deprecated
-from .default_config import CalibrationMode
-from .misc import ET_ReturnCode, LocalConfig, Calculator
 
 
 class CalibrationUI(object):
@@ -44,16 +58,7 @@ class CalibrationUI(object):
         self.error_color = self._RED
 
         # constant calibration points
-        if self._pupil_io.config.cali_mode == CalibrationMode.TWO_POINTS:
-            self._calibrationPoint = [
-                (576, 540), (1344, 540)
-            ]
-        else:
-            # TODO
-            print("[WARNING] It will work in the next version")
-            self._calibrationPoint = [
-                (576, 540), (1344, 540)
-            ]
+        self._calibrationPoint = self._pupil_io.calibration_points
 
         # initialize a psychopy window
         self._screen = screen

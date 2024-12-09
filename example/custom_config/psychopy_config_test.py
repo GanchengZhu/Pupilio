@@ -82,9 +82,12 @@ pupil_io.calibration_draw(screen=win, validate=True, hands_free=False)
 # start retrieving gaze
 pupil_io.start_sampling()
 
-# hang the main thread for 5 seconds by game
-# eye tracking sampling are running on the background thread
-core.wait(3)
+# Recording data for 5 seconds
+msg = 'Recording... Script will terminate in 5 seconds.'
+txt = visual.TextStim(win, msg, height=32, color=(-1,-1,-1))
+txt.draw()
+win.flip()
+core.wait(5.0)
 
 # stop eye tracking sampling
 pupil_io.stop_sampling()
@@ -92,8 +95,7 @@ pupil_io.stop_sampling()
 # save eye movement data
 pupil_io.save_data("eye_movement.csv")
 
-# release the tracker instance
-# clean up Pupilio resources
+# release the tracker
 pupil_io.release()
 
 # quit pygame

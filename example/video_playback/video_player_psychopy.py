@@ -246,6 +246,7 @@ if __name__ == '__main__':
     # release the tracker instance
     pi.release()
 
+    fixation_stim.height = 32
     fixation_stim.text = "Playback completed..."
     fixation_stim.draw()
     win.flip()

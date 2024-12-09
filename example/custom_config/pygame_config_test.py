@@ -32,7 +32,9 @@
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
 
+# load libraries
 import pygame
+from pygame.locals import FULLSCREEN, HWSURFACE
 import pupilio
 
 # use a custom config file to control the tracker
@@ -47,7 +49,7 @@ config.look_ahead = 2
 # config.cali_mode = pupilio.CalibrationMode.FIVE_POINTS
 # config.cali_mode = 2
 # config.cali_mode = 5
-config.cali_mode = 2
+config.cali_mode = 5
 
 # Calibration target image and beep
 config.cali_target_img = "cute_duck.png"
@@ -62,6 +64,15 @@ config.cali_target_img_minimum_size = 60
 # recommended size: 128 x 128 pixels
 config.cali_smiling_face_img =  "cute_duck.png"
 config.cali_frowning_face_img =  "cute_duck.png"
+
+# initialize PyGame
+pygame.init()
+
+# scree size
+scn_width, scn_height = (1920, 1080)
+
+# open a window in fullscreen mode
+win = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN|HWSURFACE)
 
 # Initialize the tracker
 pupil_io = pupilio.Pupilio(config)
@@ -78,9 +89,16 @@ pupil_io.calibration_draw(validate=True, hands_free=False)
 # start retrieving gaze
 pupil_io.start_sampling()
 
-# hang the main thread for 5 seconds by game
-# eye tracking sampling are running on the background thread
-pygame.time.wait(3 * 1000)
+# Recording data for 5 seconds
+msg = 'Recording... Script will terminate in 5 seconds.'
+font = pygame.font.SysFont('Arial', 32)
+_w, _h = font.size(msg)
+txt = font.render(msg, True, (0,0,0))
+win.fill((128,128,128))
+win.blit(txt, ((scn_width - _w)//2, (scn_height - _h)//2))
+pygame.display.flip()
+
+pygame.time.wait(5 * 1000)
 
 # stop eye tracking sampling
 pupil_io.stop_sampling()
@@ -91,8 +109,7 @@ pygame.time.wait(100)
 # save eye movement data
 pupil_io.save_data("eye_movement.csv")
 
-# release the tracker instance
-# clean up Pupilio resources
+# release the tracker
 pupil_io.release()
 
 # quit pygame

@@ -162,16 +162,15 @@ class Pupilio:
 
         # set calibration mode
         if self.config.cali_mode == CalibrationMode.TWO_POINTS:
-            calibration_points = np.zeros(2 * 2, dtype=np.float32)
+            self.calibration_points = np.zeros(2 * 2, dtype=np.float32)
         elif self.config.cali_mode == CalibrationMode.FIVE_POINTS:
-            calibration_points = np.zeros(2 * 5, dtype=np.float32)
+            self.calibration_points = np.zeros(2 * 5, dtype=np.float32)
         else:
-            calibration_points = np.zeros(2 * 2, dtype=np.float32)
+            self.calibration_points = np.zeros(2 * 2, dtype=np.float32)
 
-        self._et_native_lib.pupil_io_set_cali_mode(self.config.cali_mode, calibration_points)
-        print(calibration_points)
-        self.config._calibration_points = calibration_points
-
+        self._et_native_lib.pupil_io_set_cali_mode(self.config.cali_mode, self.calibration_points)
+        self.calibration_points = np.reshape(self.calibration_points, (-1, 2))
+        print(self.calibration_points)
 
         # Initialize Pupilio, raise an exception if initialization fails
         if self._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:

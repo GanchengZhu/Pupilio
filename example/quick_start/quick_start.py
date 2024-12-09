@@ -27,25 +27,59 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # DESCRIPTION:
-# This demo shows how to configure the calibration process
+# This script shows the most basic commands needed for an eye-tracking task
 
-# Author: GC Zhu
-# Email: zhugc2016@gmail.com
+# load libraries
+import pygame
+from pygame.locals import FULLSCREEN, HWSURFACE
+from pupilio import Pupilio
 
-_major_version = '1'
-_minor_version = '2'
-_patch_version = '2'
+# initialize PyGame
+pygame.init()
 
-__version__ = f'{_major_version}.{_minor_version}.{_patch_version}'
+# scree size
+scn_width, scn_height = (1920, 1080)
 
-__title__ = "Pupil.IO"
-__description__ = "Pupil.IO is a python toolbox for pupilio eye trackers. "
-__url__ = "https://github.com/GanchengZhu/Pupilio"
-__uri__ = __url__
-__doc__ = __description__ + " <" + __url__ + ">"
+# open a window in fullscreen mode
+win = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN|HWSURFACE)
 
-__author__ = "Pupil.IO"
-__email__ = "zhugc2016@gmail.com"
+# Initialize the tracker
+pupil_io = Pupilio()
 
-__license__ = "Creative Commons Attribution 4.0 (CC BY 4.0)"
-__copyright__ = "Copyright (c) 2023-2024 " + __author__
+# create a task session, and set a session name
+# If the session name contains spaces,
+# it is recommended to replace them with underscores '_'.
+pupil_io.create_session(session_name="quick_start")
+
+# calibration and validation (recommended)
+# set 'validate' to True if we would like to verify the calibration results
+pupil_io.calibration_draw(validate=True)
+
+# start recording
+pupil_io.start_sampling()
+
+# Recording data for 5 seconds
+msg = 'Recording... Script will terminate in 5 seconds.'
+font = pygame.font.SysFont('Arial', 32)
+_w, _h = font.size(msg)
+txt = font.render(msg, True, (0,0,0))
+win.fill((128,128,128))
+win.blit(txt, ((scn_width - _w)//2, (scn_height - _h)//2))
+pygame.display.flip()
+
+pygame.time.wait(5 * 1000)
+
+# stop recording
+pupil_io.stop_sampling()
+
+# sleep for 100 ms to capture ending samples
+pygame.time.wait(100)
+
+# save sample data to file
+pupil_io.save_data("eye_movement.csv")
+
+# release the tracker
+pupil_io.release()
+
+# quit pygame
+pygame.quit()

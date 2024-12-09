@@ -13,7 +13,8 @@ def deprecated(version):
         @wraps(func)
         def wrapper(*args, **kwargs):
             warnings.warn(
-                f"The function '{func.__name__}' is deprecated since version {version} and will be removed in future versions. Please use the new alternative.",
+                f"The function '{func.__name__}' is deprecated since version {version} and will be removed in"
+                f" future versions. Please use the new alternative.",
                 DeprecationWarning,
             )
             return func(*args, **kwargs)
