@@ -2,6 +2,7 @@
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
 import os
+
 from .misc import CalibrationMode
 
 
@@ -45,6 +46,9 @@ class DefaultConfig:
 
         # Calibration mode (either 2 or 5)
         self.cali_mode = CalibrationMode.TWO_POINTS  # Default to TWO_POINTS calibration mode
+
+        # Private calibration points. It will be initialized when pupilio init
+        self._calibration_points = None
 
     @property
     def cali_mode(self):

@@ -1,3 +1,37 @@
+# _*_ coding: utf-8 _*_
+# Copyright (c) 2024, Hangzhou Deep Gaze Sci & Tech Ltd
+# All Rights Reserved
+#
+# For use by  Hangzhou Deep Gaze Sci & Tech Ltd licencees only.
+# Redistribution and use in source and binary forms, with or without
+# modification, are NOT permitted.
+#
+# Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in
+# the documentation and/or other materials provided with the distribution.
+#
+# Neither name of  Hangzhou Deep Gaze Sci & Tech Ltd nor the name of
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
+# IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# DESCRIPTION:
+# This demo shows how to configure the calibration process
+
+# Author: GC Zhu
+# Email: zhugc2016@gmail.com
+
 import ctypes
 import ipaddress
 import logging
@@ -12,7 +46,7 @@ import numpy as np
 
 from .annotation import deprecated
 from .default_config import DefaultConfig
-from .misc import ET_ReturnCode
+from .misc import ET_ReturnCode, CalibrationMode
 
 
 class Pupilio:
@@ -81,6 +115,7 @@ class Pupilio:
         self._et_native_lib.pupil_io_save_data_to.restype = ctypes.c_int
         self._et_native_lib.pupil_io_clear_cache.restype = ctypes.c_int
         self._et_native_lib.pupil_io_get_current_gaze.restype = ctypes.c_int
+        self._et_native_lib.pupil_io_set_cali_mode.restype = ctypes.c_int
 
         # Set argument types
         self._et_native_lib.pupil_io_cali.argtypes = [ctypes.c_int]
@@ -114,12 +149,29 @@ class Pupilio:
             np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
             np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS')
         ]
+        self._et_native_lib.pupil_io_set_cali_mode.argtypes = [
+            ctypes.c_int,
+            np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
+        ]
 
         version = self._et_native_lib.pupil_io_get_version()
         print("Native Pupilio Version:", version.decode("gbk"))
 
         # set filter parameter: look ahead
         self._et_native_lib.pupil_io_set_look_ahead(self.config.look_ahead)
+
+        # set calibration mode
+        if self.config.cali_mode == CalibrationMode.TWO_POINTS:
+            calibration_points = np.zeros(2 * 2, dtype=np.float32)
+        elif self.config.cali_mode == CalibrationMode.FIVE_POINTS:
+            calibration_points = np.zeros(2 * 5, dtype=np.float32)
+        else:
+            calibration_points = np.zeros(2 * 2, dtype=np.float32)
+
+        self._et_native_lib.pupil_io_set_cali_mode(self.config.cali_mode, calibration_points)
+        print(calibration_points)
+        self.config._calibration_points = calibration_points
+
 
         # Initialize Pupilio, raise an exception if initialization fails
         if self._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:
