@@ -1,5 +1,10 @@
 # Pupilio SDK Update Log
 
+## Version 1.2.2 (Build 1) - 2024-12-08
+- Improve UX design of demonstrations.
+- Added five calibration mode in `graphics.py` and `graphics_pygame.py`.
+- Added `_et_native_lib.pupil_io_set_cali_mode` function signature.
+
 ## Version 1.2.1 (Build 1) - 2024-12-08
 - Fixed video playback stuttering caused by the OpenCV library.
 - Fixed minor issues with `PupilioET`.

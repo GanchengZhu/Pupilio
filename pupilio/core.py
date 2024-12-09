@@ -170,7 +170,6 @@ class Pupilio:
 
         self._et_native_lib.pupil_io_set_cali_mode(self.config.cali_mode, self.calibration_points)
         self.calibration_points = np.reshape(self.calibration_points, (-1, 2))
-        print(self.calibration_points)
 
         # Initialize Pupilio, raise an exception if initialization fails
         if self._et_native_lib.pupil_io_init() != ET_ReturnCode.ET_SUCCESS.value:
