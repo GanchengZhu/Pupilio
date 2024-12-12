@@ -35,6 +35,7 @@
 import os
 from pathlib import Path
 
+from .callback import CalibrationListener
 from .misc import CalibrationMode
 
 
@@ -131,6 +132,9 @@ class DefaultConfig:
         # is disabled, suitable for users with strabismus.
         self.enable_kappa_verification = 1
 
+        # calibration listener
+        self.calibration_listener: CalibrationListener = None
+
         # debug parameters
         self.enable_debug_logging = 0
         self.log_directory = str(Path.home().absolute() / "Pupilio" / "native_log")
@@ -167,6 +171,8 @@ class DefaultConfig:
             "Press \"R\" or double click on the screen to recalibrate."
         )  # Instruction for initiating recalibration (legend_recalibration)
 
+        #
+        self._lang = "simplified_chinese"
         self.instruction_language()
 
     @property
@@ -195,11 +201,14 @@ class DefaultConfig:
                 - 'english': Updates instructions to English.
                 - 'french': Updates instructions to French.
                 - 'spanish': Updates instructions to Spanish.
+                - 'japanese': Updates instructions to Japanese.
+                - 'korean': Updates instructions to Korean.
 
         Raises:
             ValueError: If an unsupported language is specified.
         """
 
+        self._lang = lang
         if lang == 'simplified_chinese':
             self.simplified_chinese()
         elif lang == 'traditional_chinese':
@@ -210,6 +219,10 @@ class DefaultConfig:
             self.french()
         elif lang == 'spanish':
             self.spanish()
+        elif lang == "japanese":
+            self.japanese()
+        elif lang == "korean":
+            self.korean()
         else:
             raise ValueError(f"Unsupported language: {lang}")
 
@@ -223,10 +236,8 @@ class DefaultConfig:
         self.instruction_head_center = "请将头移动到画面中央"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = (
-            "屏幕上会出现两个点，请按顺序注视这些点。\n"
-            "按下回车键或点击屏幕（或者鼠标左键）开始校准。"
-        )
+        self.instruction_enter_calibration = "屏幕上会出现两个点，请按顺序注视这些点\n按下回车键或鼠标左键(点击屏幕)开始校准"
+
         self.instruction_hands_free_calibration = (
             "倒计时后屏幕会显示几个点，请按顺序注视这些点。"
         )
@@ -242,34 +253,122 @@ class DefaultConfig:
         self.legend_left_eye = "左眼注视点"
         self.legend_right_eye = "右眼注视点"
         self.instruction_calibration_over = (
-            "按下\"回车键\"或点击屏幕（或者鼠标左键）继续。"
+            "按下\"回车键\"或鼠标左键(点击屏幕)继续。"
         )
         self.instruction_recalibration = (
-            "按下\"R\"键或双击屏幕（或者双击鼠标左键）重新校准。"
+            "按下\"R\"键或鼠标右键(长按屏幕)重新校准。"
         )
 
-    def traditional_chinese(self):
-        """
-        Update all instructions and legends to Traditional Chinese.
-        """
+    def english(self):
         # Calibration preview instructions
-        self.instruction_face_far = "請往後退一點"
-        self.instruction_face_near = "請靠近一點"
-        self.instruction_head_center = "請將頭部置於畫面中央"
+        self.instruction_face_far = "Please move farther back"
+        self.instruction_face_near = "Please move closer"
+        self.instruction_head_center = "Please center your head in the frame"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = (
-            "螢幕上將出現兩個點，請依次注視。\n"
-            "按下 Enter 鍵或點擊螢幕（或滑鼠左鍵）開始校準。"
-        )
+        self.instruction_enter_calibration = "Two points will appear on the screen, please focus on them in order\nPress Enter or left-click (click the screen) to start calibration"
+
         self.instruction_hands_free_calibration = (
-            "倒數計時後，螢幕上將出現多個點，請依次注視。"
+            "After the countdown, several points will appear on the screen, please focus on them in order."
         )
 
         # Validation entry instructions
         self.instruction_enter_validation = (
-            "螢幕上將出現五個點，請注視這些點。\n"
-            "按下 Enter 鍵或點擊螢幕（或滑鼠左鍵）開始驗證。"
+            "Five points will appear on the screen, please focus on them.\n"
+            "Press Enter or click the screen (or left-click) to start validation."
+        )
+
+        # Validation result legends
+        self.legend_target = "Target Point"
+        self.legend_left_eye = "Left Eye Focus"
+        self.legend_right_eye = "Right Eye Focus"
+        self.instruction_calibration_over = (
+            "Press \"Enter\" or left-click (click the screen) to continue."
+        )
+        self.instruction_recalibration = (
+            "Press \"R\" or right-click (long press the screen) to recalibrate."
+        )
+
+    def french(self):
+        # Calibration preview instructions
+        self.instruction_face_far = "Veuillez vous éloigner"
+        self.instruction_face_near = "Veuillez vous rapprocher"
+        self.instruction_head_center = "Veuillez centrer votre tête dans l'image"
+
+        # Calibration entry instructions
+        self.instruction_enter_calibration = "Deux points apparaîtront à l'écran, veuillez les regarder dans l'ordre\nAppuyez sur Entrée ou cliquez à gauche (cliquez sur l'écran) pour commencer l'étalonnage"
+
+        self.instruction_hands_free_calibration = (
+            "Après le compte à rebours, plusieurs points apparaîtront à l'écran, veuillez les regarder dans l'ordre."
+        )
+
+        # Validation entry instructions
+        self.instruction_enter_validation = (
+            "Cinq points apparaîtront à l'écran, veuillez les regarder.\n"
+            "Appuyez sur Entrée ou cliquez sur l'écran (ou cliquez à gauche) pour commencer la validation."
+        )
+
+        # Validation result legends
+        self.legend_target = "Point cible"
+        self.legend_left_eye = "Point de focus œil gauche"
+        self.legend_right_eye = "Point de focus œil droit"
+        self.instruction_calibration_over = (
+            "Appuyez sur \"Entrée\" ou cliquez à gauche (cliquez sur l'écran) pour continuer."
+        )
+        self.instruction_recalibration = (
+            "Appuyez sur \"R\" ou cliquez à droite (maintenez l'écran) pour recalibrer."
+        )
+
+    def spanish(self):
+        # Calibration preview instructions
+        self.instruction_face_far = "Por favor, retroceda"
+        self.instruction_face_near = "Por favor, acérquese"
+        self.instruction_head_center = "Por favor, centre su cabeza en la pantalla"
+
+        # Calibration entry instructions
+        self.instruction_enter_calibration = \
+            ("Aparecerán dos puntos en la pantalla, por favor mírelos en orden\n"
+             "Presione Enter o haga clic con el botón izquierdo "
+             "(haga clic en la pantalla) para comenzar la calibración")
+
+        self.instruction_hands_free_calibration = (
+            "Después de la cuenta regresiva, aparecerán varios puntos en la pantalla, por favor mírelos en orden."
+        )
+
+        # Validation entry instructions
+        self.instruction_enter_validation = (
+            "Aparecerán cinco puntos en la pantalla, por favor mírelos.\n"
+            "Presione Enter o haga clic en la pantalla (o haga clic con el botón izquierdo) para comenzar la validación."
+        )
+
+        # Validation result legends
+        self.legend_target = "Punto objetivo"
+        self.legend_left_eye = "Punto de enfoque ojo izquierdo"
+        self.legend_right_eye = "Punto de enfoque ojo derecho"
+        self.instruction_calibration_over = (
+            "Presione \"Enter\" o haga clic con el botón \nizquierdo (haga clic en la pantalla) para continuar."
+        )
+        self.instruction_recalibration = (
+            "Presione \"R\" o haga clic con el botón derecho \n(mantenga presionada la pantalla) para recalibrar."
+        )
+
+    def traditional_chinese(self):
+        # Calibration preview instructions
+        self.instruction_face_far = "請往後移遠些"
+        self.instruction_face_near = "請靠近一些"
+        self.instruction_head_center = "請將頭移到畫面中央"
+
+        # Calibration entry instructions
+        self.instruction_enter_calibration = "畫面上會出現兩個點，請按順序注視這些點\n按下回車鍵或鼠標左鍵(點擊螢幕)開始校準"
+
+        self.instruction_hands_free_calibration = (
+            "倒數計時後畫面會顯示幾個點，請按順序注視這些點。"
+        )
+
+        # Validation entry instructions
+        self.instruction_enter_validation = (
+            "畫面上會出現五個點，請注視這些點。\n"
+            "按下回車鍵或點擊螢幕（或者鼠標左鍵）開始驗證。"
         )
 
         # Validation result legends
@@ -277,113 +376,69 @@ class DefaultConfig:
         self.legend_left_eye = "左眼注視點"
         self.legend_right_eye = "右眼注視點"
         self.instruction_calibration_over = (
-            "按下 \"Enter\" 或點擊螢幕（或滑鼠左鍵）繼續。"
+            "按下\"回車鍵\"或鼠標左鍵(點擊螢幕)繼續。"
         )
         self.instruction_recalibration = (
-            "按下 \"R\" 或雙擊螢幕（或滑鼠左鍵雙擊）重新校準。"
+            "按下\"R\"鍵或鼠標右鍵(長按螢幕)重新校準。"
         )
 
-    def english(self):
-        """
-        Update all instructions and legends to English.
-        """
+    def japanese(self):
         # Calibration preview instructions
-        self.instruction_face_far = "Please move further back"
-        self.instruction_face_near = "Please move closer"
-        self.instruction_head_center = "Please center your head in the frame"
+        self.instruction_face_far = "もっと後ろに移動してください"
+        self.instruction_face_near = "もっと近づいてください"
+        self.instruction_head_center = "画面の中央に頭を移動してください"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = (
-            "Two points will appear on the screen. Please look at them in sequence.\n"
-            "Press the Enter key or click on the screen (or left mouse button) to start calibration."
-        )
+        self.instruction_enter_calibration = "画面に2つの点が表示されますので、その順番で注視してください\nEnterキーまたは左クリック（画面をクリック）でキャリブレーションを開始します"
+
         self.instruction_hands_free_calibration = (
-            "After the countdown, several points will appear on the screen. Please look at them in sequence."
+            "カウントダウン後、画面にいくつかの点が表示されますので、その順番で注視してください。"
         )
 
         # Validation entry instructions
         self.instruction_enter_validation = (
-            "Five points will appear on the screen. Please look at them.\n"
-            "Press the Enter key or click on the screen (or left mouse button) to start validation."
+            "画面に5つの点が表示されますので、それらを注視してください。\n"
+            "Enterキーまたは左クリック（画面をクリック）で検証を開始します。"
         )
 
         # Validation result legends
-        self.legend_target = "Target Point"
-        self.legend_left_eye = "Left Eye Gaze Point"
-        self.legend_right_eye = "Right Eye Gaze Point"
+        self.legend_target = "ターゲットポイント"
+        self.legend_left_eye = "左目の注視点"
+        self.legend_right_eye = "右目の注視点"
         self.instruction_calibration_over = (
-            "Press \"Enter\" or click on the screen (or left mouse button) to continue."
+            "「Enterキー」または左クリック（画面をクリック）で続行します。"
         )
         self.instruction_recalibration = (
-            "Press \"R\" or double-click on the screen (or double left-click) to recalibrate."
+            "「R」キーまたは右クリック（画面を長押し）で再キャリブレーションします。"
         )
 
-    def french(self):
-        """
-        Update all instructions and legends to French.
-        """
+    def korean(self):
         # Calibration preview instructions
-        self.instruction_face_far = "Veuillez vous éloigner un peu"
-        self.instruction_face_near = "Veuillez vous rapprocher"
-        self.instruction_head_center = "Veuillez centrer votre tête dans le cadre"
+        self.instruction_face_far = "조금 더 뒤로 가주세요"
+        self.instruction_face_near = "조금 더 가까이 가세요"
+        self.instruction_head_center = "화면 중앙에 머리를 위치시켜 주세요"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = (
-            "Deux points apparaîtront à l'écran. Veuillez les regarder dans l'ordre.\n"
-            "Appuyez sur la touche Entrée ou cliquez sur l'écran (ou bouton gauche de la souris) pour commencer la calibration."
-        )
+        self.instruction_enter_calibration = "화면에 두 개의 점이 나타나면 순서대로 주시하세요\nEnter 키 또는 왼쪽 클릭(화면 클릭)으로 교정 시작"
+
         self.instruction_hands_free_calibration = (
-            "Après le compte à rebours, plusieurs points apparaîtront à l'écran. Veuillez les regarder dans l'ordre."
+            "카운트다운 후 화면에 여러 점이 나타납니다. 순서대로 주시해주세요."
         )
 
         # Validation entry instructions
         self.instruction_enter_validation = (
-            "Cinq points apparaîtront à l'écran. Veuillez les regarder.\n"
-            "Appuyez sur la touche Entrée ou cliquez sur l'écran (ou bouton gauche de la souris) pour commencer la validation."
+            "화면에 다섯 개의 점이 나타납니다. 그 점들을 주시해주세요.\n"
+            "Enter 키 또는 왼쪽 클릭(화면 클릭)으로 검증을 시작합니다."
         )
 
         # Validation result legends
-        self.legend_target = "Point Cible"
-        self.legend_left_eye = "Point de Regard de l'Œil Gauche"
-        self.legend_right_eye = "Point de Regard de l'Œil Droit"
+        self.legend_target = "목표 점"
+        self.legend_left_eye = "왼쪽 눈 주시점"
+        self.legend_right_eye = "오른쪽 눈 주시점"
         self.instruction_calibration_over = (
-            "Appuyez sur \"Entrée\" ou cliquez sur l'écran (ou bouton gauche de la souris) pour continuer."
+            "「Enter 키」 또는 왼쪽 클릭(화면 클릭)으로 계속 진행합니다."
         )
         self.instruction_recalibration = (
-            "Appuyez sur \"R\" ou double-cliquez sur l'écran (ou double-clic gauche) pour recalibrer."
+            "「R」 키 또는 오른쪽 클릭(화면 길게 누르기)으로 재교정합니다."
         )
 
-    def spanish(self):
-        """
-        Update all instructions and legends to Spanish.
-        """
-        # Calibration preview instructions
-        self.instruction_face_far = "Por favor, aléjate un poco"
-        self.instruction_face_near = "Por favor, acércate un poco"
-        self.instruction_head_center = "Por favor, centra tu cabeza en el marco"
-
-        # Calibration entry instructions
-        self.instruction_enter_calibration = (
-            "Aparecerán dos puntos en la pantalla. Por favor, míralos en secuencia.\n"
-            "Presiona la tecla Enter o haz clic en la pantalla (o botón izquierdo del ratón) para comenzar la calibración."
-        )
-        self.instruction_hands_free_calibration = (
-            "Después de la cuenta regresiva, aparecerán varios puntos en la pantalla. Por favor, míralos en secuencia."
-        )
-
-        # Validation entry instructions
-        self.instruction_enter_validation = (
-            "Aparecerán cinco puntos en la pantalla. Por favor, míralos.\n"
-            "Presiona la tecla Enter o haz clic en la pantalla (o botón izquierdo del ratón) para comenzar la validación."
-        )
-
-        # Validation result legends
-        self.legend_target = "Punto Objetivo"
-        self.legend_left_eye = "Punto de Mirada del Ojo Izquierdo"
-        self.legend_right_eye = "Punto de Mirada del Ojo Derecho"
-        self.instruction_calibration_over = (
-            "Presiona \"Enter\" o haz clic en la pantalla (o botón izquierdo del ratón) para continuar."
-        )
-        self.instruction_recalibration = (
-            "Presiona \"R\" o haz doble clic en la pantalla (o doble clic izquierdo) para recalibrar."
-        )

@@ -47,6 +47,7 @@ import numpy as np
 import pygame
 from pygame import Rect
 
+from .callback import CalibrationListener
 from .default_config import DefaultConfig
 from .misc import ET_ReturnCode, LocalConfig, Calculator
 
@@ -74,8 +75,8 @@ class CalibrationUI(object):
             else:
                 _font_name = pygame.font.get_fonts()[0]
 
-            self._font = pygame.font.SysFont(_font_name, 36, bold=False, italic=False)
-            self._error_text_font = pygame.font.SysFont(_font_name, 24, bold=False, italic=False)
+            self._font = pygame.font.SysFont(_font_name, 28, bold=False, italic=False)
+            self._error_text_font = pygame.font.SysFont(_font_name, 20, bold=False, italic=False)
             self._instruction_font = pygame.font.SysFont(_font_name, 24, bold=False, italic=False)
 
         elif platform.system().lower() == 'linux':
@@ -205,12 +206,21 @@ class CalibrationUI(object):
         ]
 
         # previewer image surface
-        #
-        self._PREVIEWER_IMG_WIDTH = 640
-        self._PREVIEWER_IMG_HEIGHT = 480
+        self._PREVIEWER_IMG_WIDTH = 640 // 3
+        self._PREVIEWER_IMG_HEIGHT = 480 // 3
 
-        self._LEFT_PREVIEWER_POS = ()
-        self._RIGHT_PREVIEWER_POS = ()
+        self._LEFT_PREVIEWER_POS = [
+            (self._screen_width - self._PREVIEWER_IMG_WIDTH) // 2 - 5,
+            self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 10]
+        self._RIGHT_PREVIEWER_POS = [
+            (self._screen_width + self._PREVIEWER_IMG_WIDTH) // 2 + 5,
+            self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 10]
+
+        # TOP-BOTTOM COODS
+        self._LEFT_PREVIEWER_POS[0] -= self._PREVIEWER_IMG_WIDTH // 2
+        self._RIGHT_PREVIEWER_POS[0] -= self._PREVIEWER_IMG_WIDTH // 2
+        self._LEFT_PREVIEWER_POS[1] -= self._PREVIEWER_IMG_HEIGHT // 2
+        self._RIGHT_PREVIEWER_POS[1] -= self._PREVIEWER_IMG_HEIGHT // 2
 
         _pygame_previewer_size = (self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT)
         self._left_previewer_surface = pygame.Surface(_pygame_previewer_size)
@@ -313,17 +323,41 @@ class CalibrationUI(object):
     def _draw_recali_and_continue_tips(self):
         legend_texts = [self.config.instruction_calibration_over,
                         self.config.instruction_recalibration]
-        x = self._screen_width - 512
-        y = self._screen_height - 128
+        if self.config._lang == "english":
+            x = self._screen_width - 600
+            y = self._screen_height - 96
+
+        elif "chinese" in self.config._lang:
+            x = self._screen_width - 464
+            y = self._screen_height - 96
+
+        elif "japanese" in self.config._lang:
+            x = self._screen_width - 712
+            y = self._screen_height - 96
+
+        elif "korean" in self.config._lang:
+            x = self._screen_width - 464
+            y = self._screen_height - 96
+
+        elif self.config._lang == "french":
+            x = self._screen_width - 715
+            y = self._screen_height - 96
+        elif self.config._lang == "spanish":
+            x = self._screen_width - 512
+            y = self._screen_height - 144
+        else:
+            x, y = 0, 0
+            raise Exception(f"Unknown language: {self.config._lang}, please check the code.")
 
         for n, content in enumerate(legend_texts):
-            content_text_surface = self._error_text_font.render(content, True, self._BLACK)
-            content_text_rect = content_text_surface.get_rect()
-            _x = x + content_text_rect.width // 2
-            content_text_rect.center = (_x, y)
-            # text_rect.center = (self._screen_width // 2 + n * text_rect.width, self._screen_height // 2)
-            self._screen.blit(content_text_surface, content_text_rect)
-            y += content_text_rect.height + 3
+            for m, split_text in enumerate(content.split("\n")):
+                content_text_surface = self._error_text_font.render(split_text, True, self._BLACK)
+                content_text_rect = content_text_surface.get_rect()
+                _x = x + content_text_rect.width // 2
+                content_text_rect.center = (_x, y)
+                # text_rect.center = (self._screen_width // 2 + n * text_rect.width, self._screen_height // 2)
+                self._screen.blit(content_text_surface, content_text_rect)
+                y += content_text_rect.height + 3
 
     def _draw_legend(self):
         legend_texts = [self.config.legend_target, self.config.legend_left_eye, self.config.legend_right_eye]
@@ -534,6 +568,12 @@ class CalibrationUI(object):
             self._calibration_timer = 0
             self._sound.stop()
             self._sound.play()
+
+            # callback: on_calibration_target_onset
+            if (self.config.calibration_listener is not None) and (
+            isinstance(self.config.calibration_listener, CalibrationListener)):
+                self.config.calibration_listener.on_calibration_target_onset(self._calibration_point_index)
+
         elif _status == ET_ReturnCode.ET_SUCCESS.value:
             self._phase_calibration = False
             self._validation_preparing = False
@@ -564,9 +604,13 @@ class CalibrationUI(object):
 
     def _draw_previewer(self):
         _left_img, _right_img = self._pupil_io.get_preview_images()
-        _previewer_size = (self._PREVIEWER_IMG_HEIGHT, self._PREVIEWER_IMG_WIDTH)
+        _previewer_size = (self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT)
+        #  resize and rotate
         _left_img = cv2.rotate(cv2.resize(_left_img, _previewer_size), cv2.ROTATE_90_COUNTERCLOCKWISE)
         _right_img = cv2.rotate(cv2.resize(_right_img, _previewer_size), cv2.ROTATE_90_COUNTERCLOCKWISE)
+        # flip
+        _left_img = cv2.flip(_left_img, 0)
+        _right_img = cv2.flip(_right_img, 0)
         pygame.surfarray.blit_array(self._left_previewer_surface, _left_img)
         pygame.surfarray.blit_array(self._right_previewer_surface, _right_img)
         self._screen.blit(self._left_previewer_surface, self._LEFT_PREVIEWER_POS)
@@ -731,6 +775,11 @@ class CalibrationUI(object):
                         self._calibration_preparing = False
                         self._phase_calibration = True
 
+                        # callback: on_calibration_target_onset
+                        if (self.config.calibration_listener is not None) and (
+                                isinstance(self.config.calibration_listener, CalibrationListener)):
+                            self.config.calibration_listener.on_calibration_target_onset(self._calibration_point_index)
+
                     elif (event.key == pygame.K_RETURN or _left_mouse_click) and self._validation_preparing:
                         self._phase_validation = True
                         self._validation_preparing = False
@@ -775,7 +824,11 @@ class CalibrationUI(object):
             pygame.display.flip()
 
         self._sound.stop()
-        # pygame.quit()
+
+        # callback: on_calibration_over
+        if (self.config.calibration_listener is not None) and (
+                isinstance(self.config.calibration_listener, CalibrationListener)):
+            self.config.calibration_listener.on_calibration_over()
 
     def draw_hands_free(self, validate=False, bg_color=(255, 255, 255)):
         self.initialize_variables()

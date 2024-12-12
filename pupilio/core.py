@@ -168,7 +168,7 @@ class Pupilio:
         self._et_native_lib.pupil_io_set_kappa_filter(self.config.enable_kappa_verification)
         # config logger
         os.makedirs(self.config.log_directory, exist_ok=True)
-        self._et_native_lib.pupil_io_set_log(self.config.enable_debug_logging, self.config.log_dir.encode("gbk"))
+        self._et_native_lib.pupil_io_set_log(self.config.enable_debug_logging, self.config.log_directory.encode("gbk"))
 
         # set calibration mode
         if self.config.cali_mode == CalibrationMode.TWO_POINTS:
@@ -655,7 +655,7 @@ class Pupilio:
         right_img = cv2.cvtColor(right_img, cv2.COLOR_GRAY2BGR)
 
         imgs = [left_img, right_img]
-        preview_imgs = np.zeros((2, IMG_HEIGHT, IMG_WIDTH), dtype=np.uint8)
+        preview_imgs = np.zeros((2, IMG_HEIGHT, IMG_WIDTH, 3), dtype=np.uint8)
 
         rects = [
             [eye_rects[:4], eye_rects[4:8]],

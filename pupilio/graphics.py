@@ -42,10 +42,13 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import cv2
 import numpy as np
+from jedi.inference.references import search_in_file_ios
 from psychopy import visual, sound, event
 
 from .annotation import deprecated
+from .callback import CalibrationListener
 from .default_config import DefaultConfig
 from .misc import ET_ReturnCode, LocalConfig, Calculator
 
@@ -58,7 +61,7 @@ class CalibrationUI(object):
         # print('Using %s (with %s) for sounds' % (sound.audioLib, sound.audioDriver))
 
         # constant--fonts
-        self._font = "Microsoft YaHei UI"
+        self._font = "Microsoft YaHei UI Light"
         # self._font = os.path.join(self._current_dir, "asset", "simsun.ttc")
 
         # constant colors
@@ -83,6 +86,17 @@ class CalibrationUI(object):
         self._screen_height = 1080
         # self._screen.units = 'pix'
 
+        # initialize previewer parameters
+        self._PREVIEWER_IMG_WIDTH = int(640 / 2.5)
+        self._PREVIEWER_IMG_HEIGHT = int(480 / 2.5)
+
+        self._LEFT_PREVIEWER_POS = [
+            (self._screen_width - self._PREVIEWER_IMG_WIDTH) // 2 - 5,
+            self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 15]
+        self._RIGHT_PREVIEWER_POS = [
+            (self._screen_width + self._PREVIEWER_IMG_WIDTH) // 2 + 5,
+            self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 15]
+
         # self._screen = visual.Window(
         #     size=(self._screen_width, self._screen_height),
         #     fullscr=True,
@@ -98,6 +112,38 @@ class CalibrationUI(object):
             text='',
             font=self._font,
             height=32,
+            color=self._BLACK, units='pix')
+
+        self._left_previewer_img_stim = visual.ImageStim(
+            win=self._screen,
+            image=None,
+            size=(self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT),
+            pos=self._to_psychopy_coords(self._LEFT_PREVIEWER_POS),
+            colorSpace='rgb',
+            units='pix'
+        )
+
+        self._right_previewer_img_stim = visual.ImageStim(
+            win=self._screen,
+            image=None,
+            size=(self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT),
+            pos=self._to_psychopy_coords(self._RIGHT_PREVIEWER_POS),
+            colorSpace='rgb',
+            units='pix'
+        )
+
+        self._center_text_stim = visual.TextStim(
+            win=self._screen,
+            font=self._font,
+            height=26,
+            pos=(0, 0),
+            color=self._BLACK, units='pix')
+
+        self._validation_instruction = visual.TextStim(
+            win=self._screen,
+            font=self._font,
+            height=20,
+            pos=(0, 0),
             color=self._BLACK, units='pix')
 
         self._error_bar = visual.Line(
@@ -283,15 +329,49 @@ class CalibrationUI(object):
         legend_texts = [self.config.instruction_calibration_over,
                         self.config.instruction_recalibration]
 
-        x = self._screen_width // 2 - 512
-        y = -self._screen_height // 2 + 128
+        if self.config._lang == "english":
+            x = self._screen_width - 562
+            y = self._screen_height - 128
+            text_size = [562, 48]
+
+        elif "chinese" in self.config._lang:
+            x = self._screen_width - 562
+            y = self._screen_height - 128
+            text_size = [562, 48]
+
+        elif "japanese" in self.config._lang:
+            x = self._screen_width - 756
+            y = self._screen_height - 96
+            text_size = [562, 48]
+
+        elif "korean" in self.config._lang:
+            x = self._screen_width - 562
+            y = self._screen_height - 128
+            text_size = [562, 48]
+
+        elif self.config._lang == "french":
+            x = self._screen_width - 562
+            y = self._screen_height - 128
+            text_size = [562, 48]
+
+        elif self.config._lang == "spanish":
+            x = self._screen_width - 648
+            y = self._screen_height - 128
+            text_size = [648, 56]
+        else:
+            x, y = 0, 0
+            raise Exception(f"Unknown language: {self.config._lang}, please check the code.")
+
+        margin = 10
+        pos = [x + text_size[0] // 2, y + text_size[1] // 2]
 
         for n, content in enumerate(legend_texts):
-            self._txt.text = legend_texts[n]
-            self._txt.color = "black"
-            self._txt.height = 24
-            self._txt.pos = [x + self._txt.boundingBox[0] // 2, y - 36 * n]
-            self._txt.draw()
+            self._validation_instruction.text = legend_texts[n]
+            self._validation_instruction.color = "black"
+            self._validation_instruction.pos = self._to_psychopy_coords(pos)
+            _w, _h = self._validation_instruction.boundingBox
+            pos[1] += (_h + margin)
+            self._validation_instruction.draw()
 
     def _draw_legend(self):
         legend_texts = [f"+   {self.config.legend_target}",
@@ -513,6 +593,10 @@ class CalibrationUI(object):
             self._calibration_timer = 0
             self._sound.stop()
             self._sound.play()
+
+            if (self.config.calibration_listener is not None) and (
+            isinstance(self.config.calibration_listener, CalibrationListener)):
+                self.config.calibration_listener.on_calibration_target_onset(self._calibration_point_index)
         elif _status == ET_ReturnCode.ET_SUCCESS.value:
             self._phase_calibration = False
             self._validation_preparing = False
@@ -541,6 +625,38 @@ class CalibrationUI(object):
         self._animation_list[_index].pos = point
         self._animation_list[_index].draw()
 
+    def _draw_previewer(self):
+        _left_img, _right_img = self._pupil_io.get_preview_images()
+        _previewer_size = (self._PREVIEWER_IMG_HEIGHT, self._PREVIEWER_IMG_WIDTH)
+        # #  resize and rotate
+        # _left_img = cv2.rotate(cv2.resize(_left_img, _previewer_size), cv2.ROTATE_90_COUNTERCLOCKWISE)
+        # _right_img = cv2.rotate(cv2.resize(_right_img, _previewer_size), cv2.ROTATE_90_COUNTERCLOCKWISE)
+        # # flip
+        _left_img = cv2.flip(_left_img, 0)
+        _right_img = cv2.flip(_right_img, 0)
+        #  resize
+        _left_img = cv2.resize(_left_img, _previewer_size)
+        _right_img = cv2.resize(_right_img, _previewer_size)
+        _left_img = cv2.cvtColor(_left_img, cv2.COLOR_BGR2RGB)
+        _right_img = cv2.cvtColor(_right_img, cv2.COLOR_BGR2RGB)
+
+        # 将 uint8 图像转换为 [-1, 1] 范围
+        _left_img = _left_img.astype(np.float64)  # 转换为 float32 类型
+        _right_img = _right_img.astype(np.float64)
+
+        # 标准化到 [-1, 1] 范围
+        _left_img = (_left_img / 127.5) - 1.0
+        _right_img = (_right_img / 127.5) - 1.0
+
+        self._left_previewer_img_stim.image = _left_img
+        self._right_previewer_img_stim.image = _right_img
+        self._left_previewer_img_stim.draw()
+        self._right_previewer_img_stim.draw()
+        # pygame.surfarray.blit_array(self._left_previewer_surface, _left_img)
+        # pygame.surfarray.blit_array(self._right_previewer_surface, _right_img)
+        # self._screen.blit(self._left_previewer_surface, self._LEFT_PREVIEWER_POS)
+        # self._screen.blit(self._right_previewer_surface, self._RIGHT_PREVIEWER_POS)
+
     def _draw_adjust_position(self):
         if (not self._just_pos_sound_once):
             # self._just_pos_sound.play()
@@ -560,7 +676,6 @@ class CalibrationUI(object):
         _face_pos_z = _face_position[2]  # Emulating face_pos.z for testing
 
         # face cartoon
-
         # Update face point
         _eyebrow_center_point[0] = (_face_pos_x - 172.08) * 10
         _eyebrow_center_point[1] = -(_face_pos_y - 96.79) * 10
@@ -632,13 +747,11 @@ class CalibrationUI(object):
             else:
                 self._hands_free_adjust_head_start_timestamp = 0
 
-    def _draw_text_center(self, text, x, y):
+    def _draw_text_center(self, text):
         """draw some text at the screen center"""
-
-        self._txt.text = text
-        self._txt.pos = (x, y)
-        self._txt.color = self._BLACK
-        self._txt.draw()
+        self._center_text_stim.text = text
+        self._center_text_stim.pos = (0, 0)
+        self._center_text_stim.draw()
 
     def _draw_segment_text(self, text, x, y):
         _segment_text = text.split("\n")
@@ -652,7 +765,7 @@ class CalibrationUI(object):
 
     def _draw_calibration_preparing(self):
         _text = self.config.instruction_enter_calibration
-        self._draw_text_center(_text, 0, 0)
+        self._draw_text_center(_text)
 
     def _draw_calibration_preparing_hands_free(self):
         if not self._preparing_hands_free_start:
@@ -680,34 +793,46 @@ class CalibrationUI(object):
 
     def _draw_validation_preparing(self):
         _text = self.config.instruction_enter_validation
-        self._draw_text_center(_text, 0, 0)
+        self._draw_text_center(_text)
 
     def draw(self, validate=False, bg_color=(0, 0, 0)):
         self.initialize_variables()
-
         self._need_validation = validate
+        _calibration_preparing_wait = 1
+        _calibration_preparing_start = 0
         while not self._exit:
             _keys = event.getKeys()
             if (('return' in _keys) or self._mouse.getPressed()[0]) and self._phase_adjust_position:
                 self._phase_adjust_position = False
                 self._calibration_preparing = True
+                if _calibration_preparing_start == 0:
+                    _calibration_preparing_start = time.time()
 
-            elif (('return' in _keys) or self._mouse.getPressed()[0]) and self._calibration_preparing:
+            elif (('return' in _keys) or (self._mouse.getPressed()[0] and (
+                    _calibration_preparing_wait < (
+                    time.time() - _calibration_preparing_start)))) and self._calibration_preparing:
                 self._phase_adjust_position = False
                 self._calibration_preparing = False
                 self._phase_calibration = True
+
+                # callback: on_calibration_target_onset
+                if (self.config.calibration_listener is not None) and (
+                        isinstance(self.config.calibration_listener, CalibrationListener)):
+                    self.config.calibration_listener.on_calibration_target_onset(self._calibration_point_index)
 
             elif (('return' in _keys) or self._mouse.getPressed()[0]) and self._validation_preparing:
                 self._phase_validation = True
                 self._validation_preparing = False
 
-            elif (('return' in _keys) or self._mouse.getPressed()[0]) and self._phase_validation and self._drawing_validation_result:
+            elif (('return' in _keys) or self._mouse.getPressed()[
+                0]) and self._phase_validation and self._drawing_validation_result:
                 self._phase_validation = False
 
             elif ('esc' in _keys) or ('q' in _keys) or ('Q' in _keys):
                 self._exit = True
 
-            elif (('r' in _keys) or self._mouse.getPressed()[2]) and self._drawing_validation_result and self._phase_validation:
+            elif (('r' in _keys) or self._mouse.getPressed()[
+                2]) and self._drawing_validation_result and self._phase_validation:
                 self._phase_validation = False
                 self._drawing_validation_result = False
                 self._txt.height = 32
@@ -729,7 +854,7 @@ class CalibrationUI(object):
 
             elif self._phase_adjust_position:
                 self._draw_adjust_position()
-
+                self._draw_previewer()
             elif self._phase_validation:
                 self._draw_validation_point()
 
@@ -740,6 +865,11 @@ class CalibrationUI(object):
                 break
 
             self._screen.flip()
+
+        # callback: on_calibration_over
+        if (self.config.calibration_listener is not None) and (
+                isinstance(self.config.calibration_listener, CalibrationListener)):
+            self.config.calibration_listener.on_calibration_over()
 
     @deprecated("1.1.2")
     def draw_hands_free(self, validate=False, bg_color=(1, 1, 1)):

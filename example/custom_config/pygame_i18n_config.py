@@ -40,30 +40,13 @@ import pupilio
 # use a custom config file to control the tracker
 config = pupilio.DefaultConfig()
 
-# Heuristic filter, default look_ahead = 2
-config.look_ahead = 2
-
-# Calibration: 2-point vs. 5-point
-# The following usage methods are both correct, and only these four usage methods are allowed:
-# config.cali_mode = pupilio.CalibrationMode.TWO_POINTS
-# config.cali_mode = pupilio.CalibrationMode.FIVE_POINTS
-# config.cali_mode = 2
-# config.cali_mode = 5
-config.cali_mode = 2
-
-# Calibration target image and beep
-config.cali_target_img = "cute_duck.png"
-config.cali_target_beep = "duck_beep.wav"
-
-# The calibration target image would zoom-in and -out, set the max and min image size here
-
-config.cali_target_img_maximum_size = 120
-config.cali_target_img_minimum_size = 60
-
-# A cartoon face to assist users to adjust head position
-# recommended size: 128 x 128 pixels
-config.cali_smiling_face_img =  "cute_duck.png"
-config.cali_frowning_face_img =  "cute_duck.png"
+config.instruction_language()
+# config.instruction_language(lang='english')
+# config.instruction_language(lang='french')
+# config.instruction_language(lang='traditional_chinese')
+# config.instruction_language(lang='spanish')
+# config.instruction_language(lang="japanese")
+# config.instruction_language(lang="korean")
 
 # initialize PyGame
 pygame.init()

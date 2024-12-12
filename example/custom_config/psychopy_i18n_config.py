@@ -32,50 +32,27 @@
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
 
-# load libraries
-import pygame
-from pygame.locals import FULLSCREEN, HWSURFACE
+from psychopy import visual, core
 import pupilio
+
 
 # use a custom config file to control the tracker
 config = pupilio.DefaultConfig()
 
-# Heuristic filter, default look_ahead = 2
-config.look_ahead = 2
-
-# Calibration: 2-point vs. 5-point
-# The following usage methods are both correct, and only these four usage methods are allowed:
-# config.cali_mode = pupilio.CalibrationMode.TWO_POINTS
-# config.cali_mode = pupilio.CalibrationMode.FIVE_POINTS
-# config.cali_mode = 2
-# config.cali_mode = 5
-config.cali_mode = 2
-
-# Calibration target image and beep
-config.cali_target_img = "cute_duck.png"
-config.cali_target_beep = "duck_beep.wav"
-
-# The calibration target image would zoom-in and -out, set the max and min image size here
-
-config.cali_target_img_maximum_size = 120
-config.cali_target_img_minimum_size = 60
-
-# A cartoon face to assist users to adjust head position
-# recommended size: 128 x 128 pixels
-config.cali_smiling_face_img =  "cute_duck.png"
-config.cali_frowning_face_img =  "cute_duck.png"
-
-# initialize PyGame
-pygame.init()
-
-# scree size
-scn_width, scn_height = (1920, 1080)
-
-# open a window in fullscreen mode
-win = pygame.display.set_mode((scn_width, scn_height), FULLSCREEN|HWSURFACE)
+config.instruction_language()
+# config.instruction_language(lang='english')
+# config.instruction_language(lang='french')
+# config.instruction_language(lang='traditional_chinese')
+# config.instruction_language(lang='spanish')
+# config.instruction_language(lang='japanese')
+# config.instruction_language(lang='korean')
 
 # Initialize the tracker
 pupil_io = pupilio.Pupilio(config)
+
+# Open a Psychopy Window
+scn_width, scn_height = (1920, 1080)
+win = visual.Window((scn_width, scn_height), fullscr=True, units='pix')
 
 # create a task session, and set a session name
 # If the session name contains spaces,
@@ -84,27 +61,20 @@ pupil_io.create_session(session_name="quick_start")
 
 # calibration and validation (recommended)
 # set 'validate' to True if we would like to verify the calibration results
-pupil_io.calibration_draw(validate=True, hands_free=False)
+pupil_io.calibration_draw(screen=win, validate=True, hands_free=False)
 
 # start retrieving gaze
 pupil_io.start_sampling()
 
 # Recording data for 5 seconds
 msg = 'Recording... Script will terminate in 5 seconds.'
-font = pygame.font.SysFont('Arial', 32)
-_w, _h = font.size(msg)
-txt = font.render(msg, True, (0,0,0))
-win.fill((128,128,128))
-win.blit(txt, ((scn_width - _w)//2, (scn_height - _h)//2))
-pygame.display.flip()
-
-pygame.time.wait(5 * 1000)
+txt = visual.TextStim(win, msg, height=32, color=(-1,-1,-1))
+txt.draw()
+win.flip()
+core.wait(5.0)
 
 # stop eye tracking sampling
 pupil_io.stop_sampling()
-
-# sleep for 100 ms to capture ending samples
-pygame.time.wait(100)
 
 # save eye movement data
 pupil_io.save_data("eye_movement.csv")
@@ -113,4 +83,4 @@ pupil_io.save_data("eye_movement.csv")
 pupil_io.release()
 
 # quit pygame
-pygame.quit()
+core.quit()
