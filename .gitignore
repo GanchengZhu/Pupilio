@@ -17,3 +17,4 @@ example/custom_config/calibration
 example/custom_config/log_et
 example/custom_config/eye_movement.csv
 example/quick_start/log_et
+example/play_ground.py

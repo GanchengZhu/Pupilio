@@ -29,8 +29,25 @@
 # DESCRIPTION:
 # This demo shows how to configure the calibration process
 
+# !/usr/bin/python
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
+
+import json
+import logging
+import math
+import os
+import random
+import time
+from datetime import datetime
+from pathlib import Path
+
+import numpy as np
+from psychopy import visual, sound, event
+
+from .annotation import deprecated
+from .default_config import DefaultConfig
+from .misc import ET_ReturnCode, LocalConfig, Calculator
 
 
 class CalibrationUI(object):
@@ -90,12 +107,14 @@ class CalibrationUI(object):
             lineColor=self._BLACK,
             lineWidth=1.0, units='pix')
 
+        self.config: DefaultConfig = self._pupil_io.config
+
         # constant library path
         self._current_dir = os.path.abspath(os.path.dirname(__file__))
 
         # audio instructions
         # a beep that goes with the calibration target
-        self._sound = sound.Sound(self._pupil_io.config.cali_target_beep)
+        self._sound = sound.Sound(self.config.cali_target_beep)
         # calibration instructions
         self._cali_ins_sound = sound.Sound(
             os.path.join(self._current_dir, "asset", "calibration_instruction.wav"))
@@ -111,11 +130,11 @@ class CalibrationUI(object):
         # load face image to show head pose
         self._frowning_face = visual.ImageStim(
             win=self._screen, size=(128, 128),
-            image=self._pupil_io.config.cali_frowning_face_img, units='pix')
+            image=self.config.cali_frowning_face_img, units='pix')
 
         self._smiling_face = visual.ImageStim(
             win=self._screen, size=(128, 128),
-            image=self._pupil_io.config.cali_smiling_face_img, units='pix')
+            image=self.config.cali_smiling_face_img, units='pix')
 
         # clock counter
         self._clock_resource_dict = {}
@@ -163,8 +182,8 @@ class CalibrationUI(object):
              int((_point[1] - 0.5) * self._screen_height)] for _point in self._validation_points]
 
         # image resource for calibration and validation points
-        _max_size, _min_size = (self._pupil_io.config.cali_target_img_maximum_size,
-                                self._pupil_io.config.cali_target_img_minimum_size)
+        _max_size, _min_size = (self.config.cali_target_img_maximum_size,
+                                self.config.cali_target_img_minimum_size)
         self._animation_size = [
             (_min_size + (_max_size - _min_size) * i / 19, _min_size + (_max_size - _min_size) * i / 19)
             for i in range(20)]
@@ -172,7 +191,7 @@ class CalibrationUI(object):
         for i in range(10):
             _source_image = visual.ImageStim(
                 self._screen,
-                self._pupil_io.config.cali_target_img, units='pix')
+                self.config.cali_target_img, units='pix')
             _source_image.size = self._animation_size[i]
             _source_image.ori = 40 * i * 0
             self._animation_list.append(_source_image)
@@ -181,7 +200,7 @@ class CalibrationUI(object):
         self.initialize_variables()
 
         # animation frequency
-        self._animation_frequency = self._pupil_io.config.cali_target_animation_frequency
+        self._animation_frequency = self.config.cali_target_animation_frequency
 
     def initialize_variables(self):
         """Initialize variables for plotting and visualization."""
@@ -221,7 +240,6 @@ class CalibrationUI(object):
 
     def _draw_error_line(self, ground_truth_point, estimated_point, error_color):
         """ draw the ground truth position, and the estimated gaze position"""
-
         # convert to psychopy screen coordinates
         ground_truth_point = self._to_psychopy_coords(ground_truth_point)
         estimated_point = self._to_psychopy_coords(estimated_point)
@@ -262,7 +280,8 @@ class CalibrationUI(object):
         self._txt.draw()
 
     def _draw_recali_and_continue_tips(self):
-        legend_texts = ["Press \"R\" to recalibration", "Press \"Enter\" to continue"]
+        legend_texts = [self.config.instruction_calibration_over,
+                        self.config.instruction_recalibration]
 
         x = self._screen_width // 2 - 512
         y = -self._screen_height // 2 + 128
@@ -275,7 +294,10 @@ class CalibrationUI(object):
             self._txt.draw()
 
     def _draw_legend(self):
-        legend_texts = ["+   Target", "+   Left eye gaze", "+   Right eye gaze"]
+        legend_texts = [f"+   {self.config.legend_target}",
+                        f"+   {self.config.legend_left_eye}",
+                        f"+   {self.config.legend_right_eye}"]
+
         color_list = [self._GREEN, self._CRIMSON, self._CORAL]
         x = -self._screen_width // 2 + 128
         y = -self._screen_height // 2 + 128
@@ -294,9 +316,8 @@ class CalibrationUI(object):
             self._txt.height = 24
             self._txt.color = "black"
             # print(self._txt.boundingBox)
-            self._txt.pos = [x + self._txt.boundingBox[0] // 2 , y - 36 * n]
+            self._txt.pos = [x + self._txt.boundingBox[0] // 2, y - 36 * n]
             self._txt.draw()
-
 
     def _repeat_calibration_point(self):
         """repeat a validation position, if the gaze error was large or too few samples
@@ -408,7 +429,7 @@ class CalibrationUI(object):
                         )
                         if _res:
                             self._draw_error_line(_res["gt_point"], _res["min_error_es_point"], self._CRIMSON)
-                            self._draw_error_text(_res["min_error"],_res["gt_point"], is_left=True)
+                            self._draw_error_text(_res["min_error"], _res["gt_point"], is_left=True)
                     if _right_samples:
                         _res = self._calculator.calculate_error_by_sliding_window(
                             gt_point=_ground_truth_point,
@@ -526,7 +547,7 @@ class CalibrationUI(object):
             self._just_pos_sound_once = True
             # time.sleep(5)
 
-        _instruction_text = u" "
+        _instruction_text = " "
         _eyebrow_center_point = [-1, -1]
         _start_time = time.time()
         _status, _face_position = self._pupil_io.face_position()
@@ -549,7 +570,7 @@ class CalibrationUI(object):
             _rectangle_color = self._GREEN
         else:
             _rectangle_color = self._RED
-            _instruction_text = u"请把头移动到方框中央"
+            _instruction_text = self.config.instruction_head_center
 
         # Update face point color based on face position in Z-axis
         if _face_pos_z == 0:
@@ -559,9 +580,9 @@ class CalibrationUI(object):
             _face = self._frowning_face
             _face_point_color = self._RED
             if _face_pos_z > -530:
-                _instruction_text = u"远一点"
+                _instruction_text = self.config.instruction_face_far
             if _face_pos_z < -630:
-                _instruction_text = u"近一点"
+                _instruction_text = self.config.instruction_face_near
         else:
             _face = self._smiling_face
             _c = np.multiply(self._GREEN, (1 - _color_ratio)) + np.multiply(self._RED, _color_ratio)
@@ -586,9 +607,6 @@ class CalibrationUI(object):
             _face.pos = (int(_eyebrow_center_point[0]), int(_eyebrow_center_point[1]))
             _face.size = (_face_w, _face_h)
             _face.draw()
-
-        # _instruction_text = u" "
-        # _instruction_text = "  \n请调整人脸至合适的姿势以及合适的距离\n待小球与框框变绿\n按Enter键进行下一步"
 
         self._txt.text = _instruction_text
         self._txt.pos = (int(_eyebrow_center_point[0]), int(_eyebrow_center_point[1]) - _face_h * 3 // 4)
@@ -633,7 +651,7 @@ class CalibrationUI(object):
             self._txt.draw()
 
     def _draw_calibration_preparing(self):
-        _text = u"接下来会出现两个点，请依次注视它们\n按回车键进入校准"
+        _text = self.config.instruction_enter_calibration
         self._draw_text_center(_text, 0, 0)
 
     def _draw_calibration_preparing_hands_free(self):
@@ -643,12 +661,12 @@ class CalibrationUI(object):
 
         _time_elapsed = time.time() - self._preparing_hands_free_start
         if _time_elapsed <= 9.0:
-            _text = u"倒计时结束后，屏幕上会出现几个点，请依次注视它们。"  # "9秒钟后，屏幕上会出现几个点，请依次注视它们"
+            _text = self.config.instruction_hands_free_calibration
 
             self._draw_segment_text(_text, 0, 0)
-            _rest = "%d" % (10 - _time_elapsed)
-            _w = self._clock_resource_dict['.'].get_width()
-            _h = self._clock_resource_dict['.'].get_height()
+            _rest = f"{(10 - _time_elapsed)}"
+            _w = self._clock_resource_dict['.'].width
+            _h = self._clock_resource_dict['.'].height
 
             for n, _character in enumerate(_rest):
                 _center_x = self._screen_width // 2
@@ -661,7 +679,7 @@ class CalibrationUI(object):
             self._phase_calibration = True
 
     def _draw_validation_preparing(self):
-        _text = u"接下来会出现五个点，请注视它们\n按回车键进入验证"
+        _text = self.config.instruction_enter_validation
         self._draw_text_center(_text, 0, 0)
 
     def draw(self, validate=False, bg_color=(0, 0, 0)):
@@ -670,26 +688,26 @@ class CalibrationUI(object):
         self._need_validation = validate
         while not self._exit:
             _keys = event.getKeys()
-            if ('return' in _keys) and self._phase_adjust_position:
+            if (('return' in _keys) or self._mouse.getPressed()[0]) and self._phase_adjust_position:
                 self._phase_adjust_position = False
                 self._calibration_preparing = True
 
-            elif ('return' in _keys) and self._calibration_preparing:
+            elif (('return' in _keys) or self._mouse.getPressed()[0]) and self._calibration_preparing:
                 self._phase_adjust_position = False
                 self._calibration_preparing = False
                 self._phase_calibration = True
 
-            elif ('return' in _keys) and self._validation_preparing:
+            elif (('return' in _keys) or self._mouse.getPressed()[0]) and self._validation_preparing:
                 self._phase_validation = True
                 self._validation_preparing = False
 
-            elif ('return' in _keys) and self._phase_validation and self._drawing_validation_result:
+            elif (('return' in _keys) or self._mouse.getPressed()[0]) and self._phase_validation and self._drawing_validation_result:
                 self._phase_validation = False
 
             elif ('esc' in _keys) or ('q' in _keys) or ('Q' in _keys):
                 self._exit = True
 
-            elif ('r' in _keys) and self._drawing_validation_result and self._phase_validation:
+            elif (('r' in _keys) or self._mouse.getPressed()[2]) and self._drawing_validation_result and self._phase_validation:
                 self._phase_validation = False
                 self._drawing_validation_result = False
                 self._txt.height = 32

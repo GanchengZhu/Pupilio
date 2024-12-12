@@ -42,11 +42,13 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import cv2
 import numpy as np
 import pygame
 from pygame import Rect
 
-from .misc import ET_ReturnCode, LocalConfig, Calculator, CalibrationMode
+from .default_config import DefaultConfig
+from .misc import ET_ReturnCode, LocalConfig, Calculator
 
 
 class CalibrationUI(object):
@@ -95,6 +97,9 @@ class CalibrationUI(object):
         self._CORAL = (240, 128, 128)
         self._GRAY = (128, 128, 128)
 
+        # configuration
+        self.config: DefaultConfig = self._pupil_io.config
+
         # constant calibration points
         self._calibrationPoint = self._pupil_io.calibration_points
 
@@ -105,7 +110,7 @@ class CalibrationUI(object):
         self._current_dir = os.path.abspath(os.path.dirname(__file__))
 
         # audio path
-        self._beep_sound_path = self._pupil_io.config.cali_target_beep
+        self._beep_sound_path = self.config.cali_target_beep
         self._calibration_instruction_sound_path = os.path.join(self._current_dir, "asset",
                                                                 "calibration_instruction.wav")
 
@@ -128,11 +133,11 @@ class CalibrationUI(object):
         pygame.mouse.set_visible(False)
 
         # load face image
-        self._frowning_face = pygame.image.load(self._pupil_io.config.cali_frowning_face_img)
-        self._smiling_face = pygame.image.load(self._pupil_io.config.cali_smiling_face_img)
+        self._frowning_face = pygame.image.load(self.config.cali_frowning_face_img)
+        self._smiling_face = pygame.image.load(self.config.cali_smiling_face_img)
 
         # constant animation frequency (times per second)
-        self._animation_frequency = self._pupil_io.config.cali_target_animation_frequency
+        self._animation_frequency = self.config.cali_target_animation_frequency
 
         # clock counter
         self._clock_resource_dict = {}
@@ -187,9 +192,9 @@ class CalibrationUI(object):
                     self._calibration_bounds.height - self._calibration_bounds.top)
 
         # image resource for calibration and validation points
-        _source_image = pygame.image.load(self._pupil_io.config.cali_target_img)
-        _max_size, _min_size = (self._pupil_io.config.cali_target_img_maximum_size,
-                                self._pupil_io.config.cali_target_img_minimum_size)
+        _source_image = pygame.image.load(self.config.cali_target_img)
+        _max_size, _min_size = (self.config.cali_target_img_maximum_size,
+                                self.config.cali_target_img_minimum_size)
         self._animation_size = [
             (_min_size + (_max_size - _min_size) * i / 19, _min_size + (_max_size - _min_size) * i / 19)
             for i in range(20)
@@ -198,6 +203,18 @@ class CalibrationUI(object):
             _rotate(_scale(_source_image, self._animation_size[i]), 40 * i * 0)
             for i in range(10)
         ]
+
+        # previewer image surface
+        #
+        self._PREVIEWER_IMG_WIDTH = 640
+        self._PREVIEWER_IMG_HEIGHT = 480
+
+        self._LEFT_PREVIEWER_POS = ()
+        self._RIGHT_PREVIEWER_POS = ()
+
+        _pygame_previewer_size = (self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT)
+        self._left_previewer_surface = pygame.Surface(_pygame_previewer_size)
+        self._right_previewer_surface = pygame.Surface(_pygame_previewer_size)
 
         """
         variable
@@ -273,8 +290,7 @@ class CalibrationUI(object):
         pygame.draw.line(self._screen, self._BLACK, ground_truth_point, estimated_point, width=1)
 
     def _draw_error_text(self, min_error, ground_truth_point, is_left=True):
-        # error_degrees = self._calculator.error(ground_truth_point, estimated_point,
-        #                                        eye_distance)
+        """draw error text on the screen."""
         error_degrees = min_error
         height_position = 1
         # 将错误以两位小数显示，并加上度符号
@@ -295,7 +311,8 @@ class CalibrationUI(object):
         self._screen.blit(text_surface, text_rect)
 
     def _draw_recali_and_continue_tips(self):
-        legend_texts = ["Press \"R\" to recalibration", "Press \"Enter\" to continue"]
+        legend_texts = [self.config.instruction_calibration_over,
+                        self.config.instruction_recalibration]
         x = self._screen_width - 512
         y = self._screen_height - 128
 
@@ -309,7 +326,7 @@ class CalibrationUI(object):
             y += content_text_rect.height + 3
 
     def _draw_legend(self):
-        legend_texts = ["Target", "Left eye gaze", "Right eye gaze"]
+        legend_texts = [self.config.legend_target, self.config.legend_left_eye, self.config.legend_right_eye]
         color_list = [self._GREEN, self._CRIMSON, self._CORAL]
         x = 128
         y = self._screen_height - 128
@@ -545,6 +562,16 @@ class CalibrationUI(object):
             point[0] - _width // 2, point[1] - _height // 2
         ))
 
+    def _draw_previewer(self):
+        _left_img, _right_img = self._pupil_io.get_preview_images()
+        _previewer_size = (self._PREVIEWER_IMG_HEIGHT, self._PREVIEWER_IMG_WIDTH)
+        _left_img = cv2.rotate(cv2.resize(_left_img, _previewer_size), cv2.ROTATE_90_COUNTERCLOCKWISE)
+        _right_img = cv2.rotate(cv2.resize(_right_img, _previewer_size), cv2.ROTATE_90_COUNTERCLOCKWISE)
+        pygame.surfarray.blit_array(self._left_previewer_surface, _left_img)
+        pygame.surfarray.blit_array(self._right_previewer_surface, _right_img)
+        self._screen.blit(self._left_previewer_surface, self._LEFT_PREVIEWER_POS)
+        self._screen.blit(self._right_previewer_surface, self._RIGHT_PREVIEWER_POS)
+
     def _draw_adjust_position(self):
         if (not self._just_pos_sound_once):
             # self._just_pos_sound.play()
@@ -575,7 +602,7 @@ class CalibrationUI(object):
             _rectangle_color = self._GREEN
         else:
             _rectangle_color = self._RED
-            _instruction_text = "请把头移动到方框中央"
+            _instruction_text = self.config.instruction_head_center
 
         # Update face point color based on face position in Z-axis
         if _face_pos_z == 0:
@@ -585,9 +612,9 @@ class CalibrationUI(object):
             _face = self._frowning_face
             _face_point_color = self._RED
             if _face_pos_z > -530:
-                _instruction_text = "远一点"
+                _instruction_text = self.config.instruction_face_far
             if _face_pos_z < -630:
-                _instruction_text = "近一点"
+                _instruction_text = self.config.instruction_face_near
         else:
             _face = self._smiling_face
             _face_point_color = tuple(
@@ -602,13 +629,7 @@ class CalibrationUI(object):
 
         if _status == ET_ReturnCode.ET_SUCCESS.value or not (
                 _face_position[0] == 0 and _face_position[1] == 0 and _face_position[2] == 0):
-            # Draw face point as a circle
-            # pygame.draw.circle(self._screen, _face_point_color, (int(_eyebrow_center_point[0]),
-            #                                                      int(_eyebrow_center_point[1])), 50)
             self._screen.blit(_face, (int(_eyebrow_center_point[0]), int(_eyebrow_center_point[1])))
-
-        # _instruction_text = " "
-        # _instruction_text = "  \n请调整人脸至合适的姿势以及合适的距离\n待小球与框框变绿\n按Enter键进行下一步"
 
         _segment_text = _instruction_text.split("\n")
         _shift = 0
@@ -653,7 +674,7 @@ class CalibrationUI(object):
             self._screen.blit(text_surface, text_rect)
 
     def _draw_calibration_preparing(self):
-        _text = "接下来会出现两个点，请依次注视它们\n按回车键进入校准"
+        _text = self.config.instruction_enter_calibration
         self._draw_text_center(_text)
 
     def _draw_calibration_preparing_hands_free(self):
@@ -664,11 +685,11 @@ class CalibrationUI(object):
         _time_elapsed = time.time() - self._preparing_hands_free_start
         if _time_elapsed <= 9.0:
             # daikai@2024.04.23
-            _text = "倒计时结束后，屏幕上会出现几个点，请依次注视它们。"  # "9秒钟后，屏幕上会出现几个点，请依次注视它们"
+            _text = self.config.instruction_hands_free_calibration  # "9秒钟后，屏幕上会出现几个点，请依次注视它们"
             _center_x = self._screen_width // 2
             _center_y = self._screen_height // 2
             self._draw_segment_text(_text, _center_x, _center_y)
-            _rest = "%d" % (10 - _time_elapsed)
+            _rest = f"{(10 - _time_elapsed)}"
             _w = self._clock_resource_dict['.'].get_width()
             _h = self._clock_resource_dict['.'].get_height()
 
@@ -682,7 +703,7 @@ class CalibrationUI(object):
             self._phase_calibration = True
 
     def _draw_validation_preparing(self):
-        _text = "接下来会出现五个点，请注视它们\n按回车键进入验证"
+        _text = self.config.instruction_enter_validation
         self._draw_text_center(_text)
 
     def draw(self, validate=False, bg_color=(255, 255, 255)):
@@ -692,28 +713,36 @@ class CalibrationUI(object):
             for event in pygame.event.get():
                 # if event.type == pygame.quit():
                 #     break
+                _left_mouse_click = 0
+                _right_mouse_click = 0
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:  # left key press
+                        _left_mouse_click = 1
+                    elif event.button == 3:  # right key press
+                        _right_mouse_click = 1
 
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN and self._phase_adjust_position:
+                if event.type == pygame.KEYUP or event.type == pygame.MOUSEBUTTONUP:
+                    if (event.key == pygame.K_RETURN or _left_mouse_click) and self._phase_adjust_position:
                         self._phase_adjust_position = False
                         self._calibration_preparing = True
 
-                    elif event.key == pygame.K_RETURN and self._calibration_preparing:
+                    elif (event.key == pygame.K_RETURN or _left_mouse_click) and self._calibration_preparing:
                         self._phase_adjust_position = False
                         self._calibration_preparing = False
                         self._phase_calibration = True
 
-                    elif event.key == pygame.K_RETURN and self._validation_preparing:
+                    elif (event.key == pygame.K_RETURN or _left_mouse_click) and self._validation_preparing:
                         self._phase_validation = True
                         self._validation_preparing = False
 
-                    elif event.key == pygame.K_RETURN and self._phase_validation and self._drawing_validation_result:
+                    elif (
+                            event.key == pygame.K_RETURN or _left_mouse_click) and self._phase_validation and self._drawing_validation_result:
                         self._phase_validation = False
 
-                    elif event.key == pygame.K_r and self._drawing_validation_result:
+                    elif (event.key == pygame.K_r or _right_mouse_click) and self._drawing_validation_result:
                         self._phase_validation = False
                         self._drawing_validation_result = False
-                        self._pupil_io._et_native_lib.pupil_io_recalibrate()
+                        self._pupil_io.recalibration()
                         self.draw(self._need_validation, bg_color=bg_color)
 
                     elif event.key == pygame.K_q:
@@ -733,6 +762,7 @@ class CalibrationUI(object):
 
             elif self._phase_adjust_position:
                 self._draw_adjust_position()
+                self._draw_previewer()
             elif self._phase_validation:
                 self._draw_validation_point()
 
@@ -781,4 +811,3 @@ class CalibrationUI(object):
         self._sound.stop()
         self._cali_ins_sound.stop()
         self._just_pos_sound.stop()
-

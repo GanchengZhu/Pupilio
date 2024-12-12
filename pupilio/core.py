@@ -42,6 +42,7 @@ import time
 from datetime import datetime
 from typing import Callable, Tuple
 
+import cv2
 import numpy as np
 
 from .annotation import deprecated
@@ -116,6 +117,8 @@ class Pupilio:
         self._et_native_lib.pupil_io_clear_cache.restype = ctypes.c_int
         self._et_native_lib.pupil_io_get_current_gaze.restype = ctypes.c_int
         self._et_native_lib.pupil_io_set_cali_mode.restype = ctypes.c_int
+        self._et_native_lib.pupil_io_set_kappa_filter.restype = ctypes.c_int
+        self._et_native_lib.pupil_io_set_log.restype = ctypes.c_int
 
         # Set argument types
         self._et_native_lib.pupil_io_cali.argtypes = [ctypes.c_int]
@@ -153,12 +156,19 @@ class Pupilio:
             ctypes.c_int,
             np.ctypeslib.ndpointer(dtype=np.float32, ndim=1, flags='C_CONTIGUOUS'),
         ]
+        self._et_native_lib.pupil_io_set_kappa_filter.argtypes = [ctypes.c_int]
+        self._et_native_lib.pupil_io_set_log.argtypes = [ctypes.c_int, ctypes.c_char_p]
 
         version = self._et_native_lib.pupil_io_get_version()
         print("Native Pupilio Version:", version.decode("gbk"))
 
         # set filter parameter: look ahead
         self._et_native_lib.pupil_io_set_look_ahead(self.config.look_ahead)
+        # set enable kappa verify
+        self._et_native_lib.pupil_io_set_kappa_filter(self.config.enable_kappa_verification)
+        # config logger
+        os.makedirs(self.config.log_directory, exist_ok=True)
+        self._et_native_lib.pupil_io_set_log(self.config.enable_debug_logging, self.config.log_dir.encode("gbk"))
 
         # set calibration mode
         if self.config.cali_mode == CalibrationMode.TWO_POINTS:
@@ -636,3 +646,82 @@ class Pupilio:
     @property
     def sample_subscribers(self):
         return None
+
+    def _process_images(self, left_img: np.ndarray, right_img: np.ndarray, eye_rects: np.ndarray,
+                        pupil_centers: np.ndarray, glint_centers: np.ndarray) -> np.ndarray:
+
+        IMG_HEIGHT, IMG_WIDTH = 1024, 1280  # Dimensions of the preview images
+        left_img = cv2.cvtColor(left_img, cv2.COLOR_GRAY2BGR)
+        right_img = cv2.cvtColor(right_img, cv2.COLOR_GRAY2BGR)
+
+        imgs = [left_img, right_img]
+        preview_imgs = np.zeros((2, IMG_HEIGHT, IMG_WIDTH), dtype=np.uint8)
+
+        rects = [
+            [eye_rects[:4], eye_rects[4:8]],
+            [eye_rects[8:12], eye_rects[12:16]]
+        ]
+        pupil_center_list = [
+            [pupil_centers[0:2], pupil_centers[2:4]],
+            [pupil_centers[4:6], pupil_centers[6:8]]
+        ]
+        glint_center_list = [
+            [glint_centers[0:2], glint_centers[2:4]],
+            [glint_centers[4:6], glint_centers[6:8]]
+        ]
+
+        for n, img in enumerate(imgs):
+            for m, eye_rect in enumerate(rects[n]):
+                x, y, w, h = eye_rect
+                cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
+
+                pupil_center = tuple(map(int, pupil_center_list[n][m]))
+                glint_center = tuple(map(int, glint_center_list[n][m]))
+
+                cv2.circle(img, pupil_center, 5, (0, 255, 0), -1)
+                cv2.circle(img, glint_center, 5, (0, 255, 0), -1)
+
+        preview_imgs[0] = imgs[0]
+        preview_imgs[1] = imgs[1]
+
+        return preview_imgs
+
+    def get_preview_images(self):
+        """
+        Retrieves preview images and related eye-tracking data, including eye bounds, pupil centers,
+        and corneal reflection (CR) centers, from the native eye-tracking library.
+
+        Returns:
+            numpy.ndarray: A 3D array containing the left and right grayscale preview images.
+        """
+        IMG_HEIGHT, IMG_WIDTH = 1024, 1280  # Dimensions of the preview images
+
+        # Initialize arrays for preview images, eye bounds, pupil centers, and CR centers
+        preview_left_img = np.zeros((IMG_HEIGHT, IMG_WIDTH), dtype=np.uint8)  # Left preview image
+        preview_right_img = np.zeros((IMG_HEIGHT, IMG_WIDTH), dtype=np.uint8)  # Right preview image
+        # preview_imgs = np.zeros((2, IMG_HEIGHT, IMG_WIDTH), dtype=np.uint8)  # Combined preview images
+        eye_rects = np.zeros(4 * 4, dtype=np.float32)  # Array for eye bounding boxes (4 coordinates per eye)
+        pupil_centers = np.zeros(4 * 2, dtype=np.float32)  # Array for pupil centers (x, y for each pupil)
+        glint_centers = np.zeros(4 * 2, dtype=np.float32)  # Array for CR centers (x, y for each CR)
+
+        # Get C pointers to the data in the numpy arrays
+        left_img_ptr = preview_left_img.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte))
+        right_img_ptr = preview_right_img.ctypes.data_as(ctypes.POINTER(ctypes.c_ubyte))
+
+        # Call the native eye-tracking library to retrieve data
+        self._et_native_lib.pupil_io_get_previewer(ctypes.pointer(left_img_ptr),
+                                                   ctypes.pointer(right_img_ptr),
+                                                   eye_rects, pupil_centers,
+                                                   glint_centers)
+
+        # Copy data from native library back into the numpy arrays
+        ctypes.memmove(preview_left_img.ctypes.data, left_img_ptr, preview_left_img.nbytes)
+        ctypes.memmove(preview_right_img.ctypes.data, right_img_ptr, preview_right_img.nbytes)
+
+        preview_imgs = self._process_images(preview_left_img, preview_right_img, eye_rects, pupil_centers,
+                                            glint_centers)
+
+        return preview_imgs
+
+    def recalibration(self) -> int:
+        return self._et_native_lib.pupil_io_recalibrate()

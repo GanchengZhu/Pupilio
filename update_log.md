@@ -1,7 +1,11 @@
 # Pupilio SDK Update Log
 
-## Version 1.2.2 (Build 1) - 2024-12-09
+## Version 1.2.3 (Build 1) - 2024-12-12
 
+- Added `enable_kappa_verify`, `enable_debug`, and `log_dir` to `DefaultConfig`.
+- Updated `previewer_demo` and renamed the old version to `previewer_demo_legacy.py`.
+- Reduced native library calibration time.
+- Added preview images to calibration UI.
 - Improve UX design of demonstrations.
 - Added five calibration mode in `graphics.py` and `graphics_pygame.py`.
 - Added `_et_native_lib.pupil_io_set_cali_mode` function signature.
