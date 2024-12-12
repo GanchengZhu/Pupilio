@@ -447,14 +447,15 @@ class CalibrationUI(object):
                 _currentTime = datetime.now()
                 _timeString = _currentTime.strftime("%Y-%m-%d_%H-%M-%S")
 
-                with _calibrationDir.joinpath(f"{_timeString}.json").open('w') as handle:
-                    json.dump({
-                        "validation_left_samples": self._validation_left_sample_store,
-                        "validation_right_samples": self._validation_right_sample_store,
-                        "validation_ground_truth_point": self._validation_points,
-                        "validation_left_eye_distances": self._validation_left_eye_distance_store,
-                        "validation_right_eye_distances": self._validation_right_eye_distance_store
-                    }, handle)
+                if self.config.enable_validation_result_saving:
+                    with _calibrationDir.joinpath(f"{_timeString}.json").open('w') as handle:
+                        json.dump({
+                            "validation_left_samples": self._validation_left_sample_store,
+                            "validation_right_samples": self._validation_right_sample_store,
+                            "validation_ground_truth_point": self._validation_points,
+                            "validation_left_eye_distances": self._validation_left_eye_distance_store,
+                            "validation_right_eye_distances": self._validation_right_eye_distance_store
+                        }, handle)
 
                 for idx in range(len(self._validation_points)):
                     _left_samples = self._validation_left_sample_store[idx]  # n * 2

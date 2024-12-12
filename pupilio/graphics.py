@@ -479,14 +479,15 @@ class CalibrationUI(object):
                 _currentTime = datetime.now()
                 _timeString = _currentTime.strftime("%Y-%m-%d_%H-%M-%S")
                 # dump data into a json file
-                with _calibrationDir.joinpath(f"{_timeString}.json").open('w') as handle:
-                    json.dump({
-                        "validation_left_samples": self._validation_left_sample_store,
-                        "validation_right_samples": self._validation_right_sample_store,
-                        "validation_ground_truth_point": self._validation_points,
-                        "validation_left_eye_distances": self._validation_left_eye_distance_store,
-                        "validation_right_eye_distances": self._validation_right_eye_distance_store
-                    }, handle)
+                if self.config.enable_validation_result_saving:
+                    with _calibrationDir.joinpath(f"{_timeString}.json").open('w') as handle:
+                        json.dump({
+                            "validation_left_samples": self._validation_left_sample_store,
+                            "validation_right_samples": self._validation_right_sample_store,
+                            "validation_ground_truth_point": self._validation_points,
+                            "validation_left_eye_distances": self._validation_left_eye_distance_store,
+                            "validation_right_eye_distances": self._validation_right_eye_distance_store
+                        }, handle)
 
                 # now the validation process is completed, plot the results
                 for idx in range(len(self._validation_points)):
@@ -595,7 +596,7 @@ class CalibrationUI(object):
             self._sound.play()
 
             if (self.config.calibration_listener is not None) and (
-            isinstance(self.config.calibration_listener, CalibrationListener)):
+                    isinstance(self.config.calibration_listener, CalibrationListener)):
                 self.config.calibration_listener.on_calibration_target_onset(self._calibration_point_index)
         elif _status == ET_ReturnCode.ET_SUCCESS.value:
             self._phase_calibration = False

@@ -10,6 +10,10 @@
 - Added five calibration mode in `graphics.py` and `graphics_pygame.py`.
 - Added `_et_native_lib.pupil_io_set_cali_mode` function signature.
 - Updated `docs`.
+- Added previewer function on calibration.
+- Added multiple international language.
+- Added calibration callbacks
+- Update default config
 
 ---
 

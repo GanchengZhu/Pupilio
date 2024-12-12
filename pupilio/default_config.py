@@ -135,6 +135,9 @@ class DefaultConfig:
         # calibration listener
         self.calibration_listener: CalibrationListener = None
 
+        # save validation result
+        self.enable_validation_result_saving = 1
+
         # debug parameters
         self.enable_debug_logging = 0
         self.log_directory = str(Path.home().absolute() / "Pupilio" / "native_log")
