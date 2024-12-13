@@ -210,7 +210,7 @@ class CalibrationUI(object):
         self._PREVIEWER_IMG_HEIGHT = 512
 
         self._LEFT_PREVIEWER_POS = [
-            self._PREVIEWER_IMG_WIDTH // 2 + + 79
+            self._PREVIEWER_IMG_WIDTH // 2 + 79
             ,
             self._screen_height//2]
         self._RIGHT_PREVIEWER_POS = [
@@ -814,7 +814,7 @@ class CalibrationUI(object):
                     elif _user_response_recali and self._drawing_validation_result:
                         self._phase_validation = False
                         self._drawing_validation_result = False
-                        self._pupil_io.recalibration()
+                        self._pupil_io._recalibration()
                         self.draw(self._need_validation, bg_color=bg_color)
 
                     elif _keyboard_quit:

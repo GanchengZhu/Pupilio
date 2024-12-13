@@ -835,5 +835,8 @@ class Pupilio:
 
         return preview_imgs
 
-    def recalibration(self) -> int:
+    def _recalibration(self) -> int:
+        """
+        Recalibration function
+        """
         return self._et_native_lib.pupil_io_recalibrate()

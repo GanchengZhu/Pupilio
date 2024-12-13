@@ -44,7 +44,6 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from jedi.inference.references import search_in_file_ios
 from psychopy import visual, sound, event
 
 from .annotation import deprecated
@@ -866,7 +865,7 @@ class CalibrationUI(object):
                 self._drawing_validation_result = False
                 self._txt.height = 32
                 self._txt.font = self._font
-                self._pupil_io._et_native_lib.pupil_io_recalibrate()
+                self._pupil_io._recalibration()
                 self.draw(self._need_validation, bg_color=bg_color)
 
             # self._fps_clock.tick(self._fps)
