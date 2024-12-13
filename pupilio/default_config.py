@@ -1,4 +1,5 @@
 # _*_ coding: utf-8 _*_
+
 # Copyright (c) 2024, Hangzhou Deep Gaze Sci & Tech Ltd
 # All Rights Reserved
 #
@@ -31,6 +32,7 @@
 
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
+# date: 2024/12/13
 
 import os
 from pathlib import Path
@@ -92,6 +94,7 @@ class DefaultConfig:
             - `instruction_recalibration` (str): Instruction for initiating recalibration.
     """
 
+
     def __init__(self):
         # Get the absolute path of the current file's directory
         self._current_dir = os.path.abspath(os.path.dirname(__file__))
@@ -100,22 +103,31 @@ class DefaultConfig:
         self.look_ahead = 2  # Look-ahead steps for predicting target position
 
         # Font settings
-        # self.font_name = "Microsoft YaHei UI"  # Font used for displaying text
+        # self.font_name = "Microsoft YaHei UI Light"  # Font used for displaying text
 
         # Calibration resource file paths
         # Sound file for target beep during calibration
-        self.cali_target_beep = os.path.join(self._current_dir, "asset",
-                                             "beep.wav")  # Path to the calibration target beep sound
+        self.cali_target_beep = os.path.join(
+            self._current_dir,
+            "asset",
+            "beep.wav")  # Path to the calibration target beep sound
 
         # Calibration face images
-        self.cali_frowning_face_img = os.path.join(self._current_dir, "asset",
-                                                   "frowning-face.png")  # Path to frowning face image
-        self.cali_smiling_face_img = os.path.join(self._current_dir, "asset",
-                                                  "smiling-face.png")  # Path to smiling face image
+        self.cali_frowning_face_img = os.path.join(
+            self._current_dir,
+            "asset",
+            "frowning-face.png")  # Path to frowning face image
+
+        self.cali_smiling_face_img = os.path.join(
+            self._current_dir,
+            "asset",
+            "smiling-face.png")  # Path to smiling face image
 
         # Calibration target image
-        self.cali_target_img = os.path.join(self._current_dir, "asset",
-                                            "windmill.png")  # Path to windmill image used as calibration target
+        self.cali_target_img = os.path.join(
+            self._current_dir,
+            "asset",
+            "windmill.png")  # Path to windmill image used as calibration target
 
         # Calibration target image size limits
         self.cali_target_img_maximum_size = 60  # Maximum size of the calibration target image
@@ -127,9 +139,9 @@ class DefaultConfig:
         # Calibration mode (either 2 or 5)
         self.cali_mode = CalibrationMode.TWO_POINTS  # Default to TWO_POINTS calibration mode
 
-        # Verification of the kappa angle after calibration, default is 1.
+        # Verification of the kappa angle after calibration, default is 1 (verify the estimated kappa angle).
         # When this value is 0, the verification of the kappa angle after calibration
-        # is disabled, suitable for users with strabismus.
+        # is disabled, allowing calibration for users with strabismus.
         self.enable_kappa_verification = 1
 
         # calibration listener
@@ -142,41 +154,46 @@ class DefaultConfig:
         self.enable_debug_logging = 0
         self.log_directory = str(Path.home().absolute() / "Pupilio" / "native_log")
 
-        # for calibration previewer
-        # Calibration preview instructions
-        self.instruction_face_far = "Move further away"  # Instruction when the face is too close (instruction_face_far)
-        self.instruction_face_near = "Move closer"  # Instruction when the face is too far (instruction_face_near)
-        self.instruction_head_center = "Please move your head to the center of the frame"  # Instruction to align head to the center (instruction_head_center)
+        # instructions for face previewing during calibration
+        # Face previewing and head pose adjustment instructions
+        self.instruction_face_far = "Move further away"  # face is too close
+        self.instruction_face_near = "Move closer"  # face is too far
+        self.instruction_head_center = "Move your head to the center of the box"  # move head into the headbox
 
         # Calibration entry instructions
+        # entering manual calibration
         self.instruction_enter_calibration = (
             "Two points will appear. Please look at them in sequence.\n"
-            "Press Enter or click on the screen (left mouse button) to start calibration."
-        )  # Instruction for entering calibration (instruction_enter_calibration)
+            "Press Enter / click the left mouse button (or touch the screen) to start calibration."
+        )
+        # hands-free calibration
         self.instruction_hands_free_calibration = (
             "After the countdown, several points will appear. Please look at them in sequence."
-        )  # Instruction for hands-free calibration (instruction_hands_free_calibration)
+        )
 
         # Validation entry instructions
         self.instruction_enter_validation = (
             "Five points will appear. Please look at them.\n"
-            "Press Enter or click on the screen (left mouse button) to start validation."
-        )  # Instruction for entering validation (instruction_enter_validation)
+            "Press Enter / click the left mouse button (or touch the screen) to start validation."
+        )
 
         # Validation result legends
         self.legend_target = "Target"  # Legend label for target points (legend_target)
         self.legend_left_eye = "Left Eye Gaze"  # Legend label for left eye gaze (legend_left_eye)
         self.legend_right_eye = "Right Eye Gaze"  # Legend label for right eye gaze (legend_right_eye)
         self.instruction_calibration_over = (
-            "Press \"Enter\" or click on the screen to continue."
+            "Press \"Enter\" / click on the left mouse to continue."
         )  # Instruction for continuing after validation (legend_continue)
         self.instruction_recalibration = (
-            "Press \"R\" or double click on the screen to recalibrate."
+            "Press \"R\" / click on the right mouse button to recalibrate."
         )  # Instruction for initiating recalibration (legend_recalibration)
 
         #
-        self._lang = "simplified_chinese"
+        self._lang = "zh-CN"
         self.instruction_language()
+
+        # show preview? 0=no, 1=yes
+        self.face_previewing = 1
 
     @property
     def cali_mode(self):
@@ -193,38 +210,38 @@ class DefaultConfig:
         else:
             raise ValueError("Invalid calibration mode. Must be 2, 5, or a CalibrationMode instance.")
 
-    def instruction_language(self, lang='simplified_chinese'):
+    def instruction_language(self, lang='zh-CN'):
         """
         Update the instructions and legends based on the specified language.
 
         Parameters:
             lang (str): The language to update to. Supported values are:
-                - 'simple_chinese': Updates instructions to Simplified Chinese.
-                - 'traditional_chinese': Updates instructions to Traditional Chinese.
-                - 'english': Updates instructions to English.
-                - 'french': Updates instructions to French.
-                - 'spanish': Updates instructions to Spanish.
-                - 'japanese': Updates instructions to Japanese.
-                - 'korean': Updates instructions to Korean.
+                - 'zh-CN': Updates instructions to Simplified Chinese.
+                - 'zh-HK': Updates instructions to Traditional Chinese.
+                - 'en-US': Updates instructions to English.
+                - 'fr-FR': Updates instructions to French.
+                - 'es-ES': Updates instructions to Spanish.
+                - 'jp-JP': Updates instructions to Japanese.
+                - 'ko-KR': Updates instructions to Korean.
 
         Raises:
             ValueError: If an unsupported language is specified.
         """
 
         self._lang = lang
-        if lang == 'simplified_chinese':
+        if lang in ['zh-CN', 'zh-SG']:
             self.simplified_chinese()
-        elif lang == 'traditional_chinese':
+        elif lang in ['zh-HK', 'zh-TW', 'zh-MO']:
             self.traditional_chinese()
-        elif lang == 'english':
+        elif 'en-' in lang:
             self.english()
-        elif lang == 'french':
+        elif 'fr' in lang:
             self.french()
-        elif lang == 'spanish':
+        elif lang == 'es-ES':
             self.spanish()
-        elif lang == "japanese":
+        elif lang == "jp-JP":
             self.japanese()
-        elif lang == "korean":
+        elif lang == "ko-KR":
             self.korean()
         else:
             raise ValueError(f"Unsupported language: {lang}")
@@ -234,21 +251,22 @@ class DefaultConfig:
         Update all instructions and legends to Simplified Chinese.
         """
         # Calibration preview instructions
-        self.instruction_face_far = "请往后移远些"
+        self.instruction_face_far = "请后移一些"
         self.instruction_face_near = "请靠近一些"
-        self.instruction_head_center = "请将头移动到画面中央"
+        self.instruction_head_center = "请将头移动到方框中央"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = "屏幕上会出现两个点，请按顺序注视这些点\n按下回车键或鼠标左键(点击屏幕)开始校准"
+        self.instruction_enter_calibration = "屏幕上会出现两个点，请依次注视这些点\n"\
+                                             "按回车键或鼠标左键(或触击屏幕)开始校准"
 
         self.instruction_hands_free_calibration = (
-            "倒计时后屏幕会显示几个点，请按顺序注视这些点。"
+            "倒计时结束后屏幕上会出现几个点，请依次注视这些点"
         )
 
         # Validation entry instructions
         self.instruction_enter_validation = (
-            "屏幕上会出现五个点，请注视这些点。\n"
-            "按下回车键或点击屏幕（或者鼠标左键）开始验证。"
+            "屏幕上会出现五个点，请依次注视这些点\n"
+            "按回车键或鼠标左键(或触击屏幕)开始验证"
         )
 
         # Validation result legends
@@ -256,35 +274,36 @@ class DefaultConfig:
         self.legend_left_eye = "左眼注视点"
         self.legend_right_eye = "右眼注视点"
         self.instruction_calibration_over = (
-            "按下\"回车键\"或鼠标左键(点击屏幕)继续。"
+            "按\"回车键\"或鼠标左键(触击屏幕)继续"
         )
         self.instruction_recalibration = (
-            "按下\"R\"键或鼠标右键(长按屏幕)重新校准。"
+            "按\"R\"键或鼠标右键(长按屏幕)重新校准"
         )
 
     def english(self):
         # Calibration preview instructions
-        self.instruction_face_far = "Please move farther back"
-        self.instruction_face_near = "Please move closer"
-        self.instruction_head_center = "Please center your head in the frame"
+        self.instruction_face_far = "Move farther back"
+        self.instruction_face_near = "Move closer"
+        self.instruction_head_center = "Move your head to the center of the box"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = "Two points will appear on the screen, please focus on them in order\nPress Enter or left-click (click the screen) to start calibration"
+        self.instruction_enter_calibration = "Two points will appear on screen, please look at them in sequence\n"\
+                                             "Press Enter or left-click the mouse (or touch the screen) to start calibration"
 
         self.instruction_hands_free_calibration = (
-            "After the countdown, several points will appear on the screen, please focus on them in order."
+            "Following the countdown, several points will appear on screen, please look at them in sequence"
         )
 
         # Validation entry instructions
         self.instruction_enter_validation = (
-            "Five points will appear on the screen, please focus on them.\n"
-            "Press Enter or click the screen (or left-click) to start validation."
+            "Five points will appear on screen, please look at them in sequence\n"
+            "Press Enter or left-click the mouse (or touch the screen) to start validation."
         )
 
         # Validation result legends
-        self.legend_target = "Target Point"
-        self.legend_left_eye = "Left Eye Focus"
-        self.legend_right_eye = "Right Eye Focus"
+        self.legend_target = "Target"
+        self.legend_left_eye = "Left Eye Gaze"
+        self.legend_right_eye = "Right Eye Gaze"
         self.instruction_calibration_over = (
             "Press \"Enter\" or left-click (click the screen) to continue."
         )
@@ -299,7 +318,8 @@ class DefaultConfig:
         self.instruction_head_center = "Veuillez centrer votre tête dans l'image"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = "Deux points apparaîtront à l'écran, veuillez les regarder dans l'ordre\nAppuyez sur Entrée ou cliquez à gauche (cliquez sur l'écran) pour commencer l'étalonnage"
+        self.instruction_enter_calibration = "Deux points apparaîtront à l'écran, veuillez les regarder dans l'ordre\n"\
+                                             "Appuyez sur Entrée ou cliquez à gauche (cliquez sur l'écran) pour commencer l'étalonnage"
 
         self.instruction_hands_free_calibration = (
             "Après le compte à rebours, plusieurs points apparaîtront à l'écran, veuillez les regarder dans l'ordre."
@@ -357,12 +377,13 @@ class DefaultConfig:
 
     def traditional_chinese(self):
         # Calibration preview instructions
-        self.instruction_face_far = "請往後移遠些"
+        self.instruction_face_far = "請後移一些"
         self.instruction_face_near = "請靠近一些"
         self.instruction_head_center = "請將頭移到畫面中央"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = "畫面上會出現兩個點，請按順序注視這些點\n按下回車鍵或鼠標左鍵(點擊螢幕)開始校準"
+        self.instruction_enter_calibration = "畫面上會出現兩個點，請按順序注視這些點\n"\
+                                             "按下回車鍵或鼠標左鍵(點擊螢幕)開始校準"
 
         self.instruction_hands_free_calibration = (
             "倒數計時後畫面會顯示幾個點，請按順序注視這些點。"
@@ -444,4 +465,3 @@ class DefaultConfig:
         self.instruction_recalibration = (
             "「R」 키 또는 오른쪽 클릭(화면 길게 누르기)으로 재교정합니다."
         )
-

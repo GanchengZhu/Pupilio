@@ -41,6 +41,9 @@ config = pupilio.DefaultConfig()
 # Heuristic filter, default look_ahead = 2
 config.look_ahead = 2
 
+# kappa verification, set to 0 ONLY for strabismus patients
+config.enable_kappa_verification = 1
+
 # Calibration: 2-point vs. 5-point
 # The following usage methods are both correct, and only these four usage methods are allowed:
 # config.cali_mode = pupilio.CalibrationMode.TWO_POINTS

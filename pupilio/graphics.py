@@ -87,15 +87,15 @@ class CalibrationUI(object):
         # self._screen.units = 'pix'
 
         # initialize previewer parameters
-        self._PREVIEWER_IMG_WIDTH = int(640 / 2.5)
-        self._PREVIEWER_IMG_HEIGHT = int(480 / 2.5)
+        self._PREVIEWER_IMG_WIDTH = int(512 / 1)
+        self._PREVIEWER_IMG_HEIGHT = int(512 / 1)
 
         self._LEFT_PREVIEWER_POS = [
-            (self._screen_width - self._PREVIEWER_IMG_WIDTH) // 2 - 5,
-            self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 15]
+            self._PREVIEWER_IMG_WIDTH // 2 + 79,
+            self._screen_height//2]
         self._RIGHT_PREVIEWER_POS = [
-            (self._screen_width + self._PREVIEWER_IMG_WIDTH) // 2 + 5,
-            self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 15]
+            self._screen_width - self._PREVIEWER_IMG_WIDTH // 2 - 79,
+            self._screen_height//2]
 
         # self._screen = visual.Window(
         #     size=(self._screen_width, self._screen_height),
@@ -104,7 +104,7 @@ class CalibrationUI(object):
         #     units='pix')
 
         # headbox to show the relative position of the head
-        self._face_in_rect = visual.Rect(self._screen, size=600, lineWidth=5, units='pix')
+        self._face_in_rect = visual.Rect(self._screen, size=(600, 600), lineWidth=5, units='pix')
 
         # Text object for instructions
         self._txt = visual.TextStim(
@@ -114,18 +114,38 @@ class CalibrationUI(object):
             height=32,
             color=self._BLACK, units='pix')
 
-        self._left_previewer_img_stim = visual.ImageStim(
+        # self._left_previewer_img_stim = visual.ImageStim(
+        #     win=self._screen,
+        #     image=None,
+        #     size=(self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT),
+        #     pos=self._to_psychopy_coords(self._LEFT_PREVIEWER_POS),
+        #     colorSpace='rgb',
+        #     units='pix'
+        # )
+        #
+        # self._right_previewer_img_stim = visual.ImageStim(
+        #     win=self._screen,
+        #     image=None,
+        #     size=(self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT),
+        #     pos=self._to_psychopy_coords(self._RIGHT_PREVIEWER_POS),
+        #     colorSpace='rgb',
+        #     units='pix'
+        # )
+
+        self._left_previewer_img_stim = visual.GratingStim(
             win=self._screen,
-            image=None,
+            tex='None',
+            mask='None',
             size=(self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT),
             pos=self._to_psychopy_coords(self._LEFT_PREVIEWER_POS),
             colorSpace='rgb',
             units='pix'
         )
 
-        self._right_previewer_img_stim = visual.ImageStim(
+        self._right_previewer_img_stim = visual.GratingStim(
             win=self._screen,
-            image=None,
+            tex='None',
+            mask='None',
             size=(self._PREVIEWER_IMG_WIDTH, self._PREVIEWER_IMG_HEIGHT),
             pos=self._to_psychopy_coords(self._RIGHT_PREVIEWER_POS),
             colorSpace='rgb',
@@ -329,34 +349,34 @@ class CalibrationUI(object):
         legend_texts = [self.config.instruction_calibration_over,
                         self.config.instruction_recalibration]
 
-        if self.config._lang == "english":
+        if 'en-' in self.config._lang:
             x = self._screen_width - 562
             y = self._screen_height - 128
             text_size = [562, 48]
 
-        elif "chinese" in self.config._lang:
+        elif "zh-" in self.config._lang:
             x = self._screen_width - 562
             y = self._screen_height - 128
             text_size = [562, 48]
 
-        elif "japanese" in self.config._lang:
+        elif "jp-" in self.config._lang:
             x = self._screen_width - 756
             y = self._screen_height - 96
             text_size = [562, 48]
 
-        elif "korean" in self.config._lang:
+        elif "ko-" in self.config._lang:
             x = self._screen_width - 562
             y = self._screen_height - 128
             text_size = [562, 48]
 
-        elif self.config._lang == "french":
+        elif 'fr-' in self.config._lang:
             x = self._screen_width - 562
             y = self._screen_height - 128
             text_size = [562, 48]
 
-        elif self.config._lang == "spanish":
+        elif 'es-' in self.config._lang:
             x = self._screen_width - 648
-            y = self._screen_height - 128
+            y = self._screen_height - 180
             text_size = [648, 56]
         else:
             x, y = 0, 0
@@ -590,10 +610,24 @@ class CalibrationUI(object):
         if _status == ET_ReturnCode.ET_CALI_CONTINUE.value:
             pass
         elif _status == ET_ReturnCode.ET_CALI_NEXT_POINT.value:
-            self._calibration_point_index += 1
-            self._calibration_timer = 0
-            self._sound.stop()
-            self._sound.play()
+            if self._calibration_point_index + 1 == len(self._calibrationPoint):
+                self._phase_calibration = False
+                self._validation_preparing = False
+                if self._need_validation and not self._hands_free:
+                    self._validation_preparing = True
+                    self._phase_validation = False
+                elif self._hands_free and self._need_validation:
+                    self._phase_calibration = False
+                    self._validation_preparing = False
+                    self._phase_validation = True
+                else:
+                    self._exit = True
+                    self.graphics_finished = True
+            else:
+                self._calibration_point_index += 1
+                self._calibration_timer = 0
+                self._sound.stop()
+                self._sound.play()
 
             if (self.config.calibration_listener is not None) and (
                     isinstance(self.config.calibration_listener, CalibrationListener)):
@@ -638,25 +672,16 @@ class CalibrationUI(object):
         #  resize
         _left_img = cv2.resize(_left_img, _previewer_size)
         _right_img = cv2.resize(_right_img, _previewer_size)
-        _left_img = cv2.cvtColor(_left_img, cv2.COLOR_BGR2RGB)
-        _right_img = cv2.cvtColor(_right_img, cv2.COLOR_BGR2RGB)
 
-        # 将 uint8 图像转换为 [-1, 1] 范围
-        _left_img = _left_img.astype(np.float64)  # 转换为 float32 类型
-        _right_img = _right_img.astype(np.float64)
-
-        # 标准化到 [-1, 1] 范围
+        # normalize to [-1, 1]
         _left_img = (_left_img / 127.5) - 1.0
         _right_img = (_right_img / 127.5) - 1.0
 
-        self._left_previewer_img_stim.image = _left_img
-        self._right_previewer_img_stim.image = _right_img
+        self._left_previewer_img_stim.tex = _left_img
+        self._right_previewer_img_stim.tex = _right_img
         self._left_previewer_img_stim.draw()
         self._right_previewer_img_stim.draw()
-        # pygame.surfarray.blit_array(self._left_previewer_surface, _left_img)
-        # pygame.surfarray.blit_array(self._right_previewer_surface, _right_img)
-        # self._screen.blit(self._left_previewer_surface, self._LEFT_PREVIEWER_POS)
-        # self._screen.blit(self._right_previewer_surface, self._RIGHT_PREVIEWER_POS)
+
 
     def _draw_adjust_position(self):
         if (not self._just_pos_sound_once):
@@ -750,18 +775,21 @@ class CalibrationUI(object):
 
     def _draw_text_center(self, text):
         """draw some text at the screen center"""
-        self._center_text_stim.text = text
-        self._center_text_stim.pos = (0, 0)
-        self._center_text_stim.draw()
+        # self._center_text_stim.text = text
+        # self._center_text_stim.pos = (0, 0)
+        # self._center_text_stim.draw()
+
+        self._draw_segment_text(text, 0, 0)
 
     def _draw_segment_text(self, text, x, y):
         _segment_text = text.split("\n")
+        self._txt._wrapWidthPix= 960
         _shift = 0
         for t in _segment_text:
             self._txt.text = t
             self._txt.color = self._BLACK
             self._txt.pos = (x, y + _shift)
-            _shift += self._txt.height
+            _shift += self._txt.boundingBox[1] + self._txt.height
             self._txt.draw()
 
     def _draw_calibration_preparing(self):
@@ -854,8 +882,10 @@ class CalibrationUI(object):
                 self._draw_validation_preparing()
 
             elif self._phase_adjust_position:
+                # show face previewer
+                if self.config.face_previewing:
+                    self._draw_previewer()
                 self._draw_adjust_position()
-                self._draw_previewer()
             elif self._phase_validation:
                 self._draw_validation_point()
 

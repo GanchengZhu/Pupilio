@@ -105,7 +105,7 @@ class CalibrationUI(object):
         self._calibrationPoint = self._pupil_io.calibration_points
 
         # constant calibration stuffs
-        self._face_in_rect = pygame.Rect(660, 240, 600, 600)
+        self._face_in_rect = pygame.Rect(660, 240, 600, 600) # x,y, w, h
 
         # constant library path
         self._current_dir = os.path.abspath(os.path.dirname(__file__))
@@ -205,16 +205,25 @@ class CalibrationUI(object):
             for i in range(10)
         ]
 
-        # previewer image surface
-        self._PREVIEWER_IMG_WIDTH = 640 // 3
-        self._PREVIEWER_IMG_HEIGHT = 480 // 3
+        # initialize previewer parameters
+        self._PREVIEWER_IMG_WIDTH = 512
+        self._PREVIEWER_IMG_HEIGHT = 512
 
         self._LEFT_PREVIEWER_POS = [
-            (self._screen_width - self._PREVIEWER_IMG_WIDTH) // 2 - 5,
-            self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 10]
+            self._PREVIEWER_IMG_WIDTH // 2 + + 79
+            ,
+            self._screen_height//2]
         self._RIGHT_PREVIEWER_POS = [
-            (self._screen_width + self._PREVIEWER_IMG_WIDTH) // 2 + 5,
-            self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 10]
+            self._screen_width - self._PREVIEWER_IMG_WIDTH // 2 - 79,
+            self._screen_height//2]
+
+        # self._LEFT_PREVIEWER_POS = [
+        #     (self._screen_width - self._PREVIEWER_IMG_WIDTH) // 2 - 5,
+        #     self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 10]
+        # self._RIGHT_PREVIEWER_POS = [
+        #     (self._screen_width + self._PREVIEWER_IMG_WIDTH) // 2 + 5,
+        #     self._screen_height - self._PREVIEWER_IMG_HEIGHT // 2 - 10]
+        #
 
         # TOP-BOTTOM COODS
         self._LEFT_PREVIEWER_POS[0] -= self._PREVIEWER_IMG_WIDTH // 2
@@ -323,26 +332,28 @@ class CalibrationUI(object):
     def _draw_recali_and_continue_tips(self):
         legend_texts = [self.config.instruction_calibration_over,
                         self.config.instruction_recalibration]
-        if self.config._lang == "english":
+
+        if 'en-' in self.config._lang:
             x = self._screen_width - 600
             y = self._screen_height - 96
 
-        elif "chinese" in self.config._lang:
+        elif "zh-" in self.config._lang:
             x = self._screen_width - 464
             y = self._screen_height - 96
 
-        elif "japanese" in self.config._lang:
+        elif "jp-" in self.config._lang:
             x = self._screen_width - 712
             y = self._screen_height - 96
 
-        elif "korean" in self.config._lang:
+        elif "ko-" in self.config._lang:
             x = self._screen_width - 464
             y = self._screen_height - 96
 
-        elif self.config._lang == "french":
+        elif 'fr-' in self.config._lang:
             x = self._screen_width - 715
             y = self._screen_height - 96
-        elif self.config._lang == "spanish":
+
+        elif 'es-' in self.config._lang:
             x = self._screen_width - 512
             y = self._screen_height - 144
         else:
@@ -670,7 +681,7 @@ class CalibrationUI(object):
         _face_w, _face_h = _face.get_size()
 
         # Draw rectangle
-        pygame.draw.rect(self._screen, _rectangle_color, (610, 190, 700, 700), 10)
+        pygame.draw.rect(self._screen, _rectangle_color, self._face_in_rect, 5)
 
         if _status == ET_ReturnCode.ET_SUCCESS.value or not (
                 _face_position[0] == 0 and _face_position[1] == 0 and _face_position[2] == 0):
@@ -760,18 +771,30 @@ class CalibrationUI(object):
                 #     break
                 _left_mouse_click = 0
                 _right_mouse_click = 0
+                _keyboard_return = 0
+                _keyboard_r = 0
+                _keyboard_quit = 0
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:  # left key press
                         _left_mouse_click = 1
                     elif event.button == 3:  # right key press
                         _right_mouse_click = 1
 
+                if event.type == pygame.KEYUP:
+                    _keyboard_return = event.key == pygame.K_RETURN
+                    _keyboard_r = event.key == pygame.K_r
+                    _keyboard_quit = event.key == pygame.K_q
+
+                _user_response_continue = _keyboard_return or _left_mouse_click
+                _user_response_recali = _keyboard_r or _right_mouse_click
+
                 if event.type == pygame.KEYUP or event.type == pygame.MOUSEBUTTONUP:
-                    if (event.key == pygame.K_RETURN or _left_mouse_click) and self._phase_adjust_position:
+
+                    if _user_response_continue and self._phase_adjust_position:
                         self._phase_adjust_position = False
                         self._calibration_preparing = True
 
-                    elif (event.key == pygame.K_RETURN or _left_mouse_click) and self._calibration_preparing:
+                    elif _user_response_continue and self._calibration_preparing:
                         self._phase_adjust_position = False
                         self._calibration_preparing = False
                         self._phase_calibration = True
@@ -781,21 +804,20 @@ class CalibrationUI(object):
                                 isinstance(self.config.calibration_listener, CalibrationListener)):
                             self.config.calibration_listener.on_calibration_target_onset(self._calibration_point_index)
 
-                    elif (event.key == pygame.K_RETURN or _left_mouse_click) and self._validation_preparing:
+                    elif _user_response_continue and self._validation_preparing:
                         self._phase_validation = True
                         self._validation_preparing = False
 
-                    elif (
-                            event.key == pygame.K_RETURN or _left_mouse_click) and self._phase_validation and self._drawing_validation_result:
+                    elif _user_response_continue and self._phase_validation and self._drawing_validation_result:
                         self._phase_validation = False
 
-                    elif (event.key == pygame.K_r or _right_mouse_click) and self._drawing_validation_result:
+                    elif _user_response_recali and self._drawing_validation_result:
                         self._phase_validation = False
                         self._drawing_validation_result = False
                         self._pupil_io.recalibration()
                         self.draw(self._need_validation, bg_color=bg_color)
 
-                    elif event.key == pygame.K_q:
+                    elif _keyboard_quit:
                         self._exit = True
 
             self._fps_clock.tick(self._fps)
@@ -811,8 +833,10 @@ class CalibrationUI(object):
                 self._draw_validation_preparing()
 
             elif self._phase_adjust_position:
+                # show face previewer
+                if self.config.face_previewing:
+                    self._draw_previewer()
                 self._draw_adjust_position()
-                self._draw_previewer()
             elif self._phase_validation:
                 self._draw_validation_point()
 

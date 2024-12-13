@@ -40,13 +40,15 @@ import pupilio
 # use a custom config file to control the tracker
 config = pupilio.DefaultConfig()
 
+config.face_previewing = 1
+
 config.instruction_language()
-# config.instruction_language(lang='english')
-# config.instruction_language(lang='french')
-# config.instruction_language(lang='traditional_chinese')
-# config.instruction_language(lang='spanish')
-# config.instruction_language(lang="japanese")
-# config.instruction_language(lang="korean")
+config.instruction_language(lang='en-US')
+config.instruction_language(lang='fr-FR')
+config.instruction_language(lang='zh-HK')
+config.instruction_language(lang='es-ES')
+config.instruction_language(lang='jp-JP')
+config.instruction_language(lang='ko-KR')
 
 # initialize PyGame
 pygame.init()
