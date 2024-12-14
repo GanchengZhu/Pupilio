@@ -6,9 +6,9 @@ pupilio.core module
    :undoc-members:
    :show-inheritance:
 
-pupilio.graphics module
+pupilio.DefaultConfig module
 -------------------
-.. automodule:: pupilio.graphics
+.. automodule:: pupilio.DefaultConfig
    :members:
    :undoc-members:
    :show-inheritance:
@@ -21,9 +21,16 @@ pupilio.misc module
    :show-inheritance:
 
 
-pupilio.filter module
+pupilio.callback module
 -------------------
-.. automodule:: pupilio.filter
+.. automodule:: pupilio.callback
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pupilio.annotation module
+-------------------
+.. automodule:: pupilio.callback
    :members:
    :undoc-members:
    :show-inheritance:

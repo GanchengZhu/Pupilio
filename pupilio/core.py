@@ -653,7 +653,9 @@ class Pupilio:
         IMG_HEIGHT, IMG_WIDTH = 1024, 1280  # Dimensions of the preview images
         left_img = cv2.cvtColor(left_img, cv2.COLOR_GRAY2BGR)
         right_img = cv2.cvtColor(right_img, cv2.COLOR_GRAY2BGR)
-        FRAME_COLOR = (0, 255, 0)  # 绿色框框
+        FRAME_COLOR = (0, 255, 0)  #
+        FRAME_WARNING = (255, 0, 0)  # WARNING FRAME
+        FRAME_SUCCESS = (255, 0, 0)  # SUCCESS
         FRAME_WIDTH = 8
 
         imgs = [left_img, right_img]
@@ -682,119 +684,95 @@ class Pupilio:
 
         # clip eye_patches
         eye_patches = []
-        for img_idx, img in enumerate(imgs):  # 遍历左右图像
+        for img_idx, img in enumerate(imgs):  # enumerate left and right images
             patches = []
-            img_h, img_w, _ = img.shape  # 获取图像尺寸
-            for patch_idx, rect in enumerate(rects[img_idx]):  # 遍历每张图像的两个矩形
-                # 确保矩形范围有效
+            img_h, img_w, _ = img.shape  # get image size
+            for patch_idx, rect in enumerate(rects[img_idx]):
+                # Ensure eye rect is valid
                 x1, y1, w, h = map(int, rect)
                 x2, y2 = x1 + w, y1 + h
                 if x1 < 0 or y1 < 0 or x2 > img_w or y2 > img_h or x1 >= x2 or y1 >= y2:
                     # print(f"Invalid rect at img {img_idx}, rect {patch_idx}: {rect}")
-                    continue  # 跳过无效的矩形
+                    FRAME_COLOR = FRAME_WARNING
+                    continue  # skip invalid frame
 
-                patch = img[y1:y2, x1:x2]  # 使用切片提取区域
+                patch = img[y1:y2, x1:x2]  # clip the eye patch
 
-                # 相对于 patch 的瞳孔和反光点位置
+                # pupil center and glint coordinates
                 pupil_x, pupil_y = pupil_center_list[img_idx][patch_idx]
                 glint_x, glint_y = glint_center_list[img_idx][patch_idx]
 
-                # 确保瞳孔中心和反光点在矩形范围内
                 if not (x1 <= pupil_x < x2 and y1 <= pupil_y < y2):
+                    FRAME_COLOR = FRAME_WARNING
                     # print(f"Invalid pupil center at img {img_idx}, rect {patch_idx}: ({pupil_x}, {pupil_y})")
-                    pupil_x, pupil_y = None, None  # 标记为无效
+                    pupil_x, pupil_y = None, None  # invalid pupil center
                 else:
                     pupil_x, pupil_y = int(pupil_x - x1), int(pupil_y - y1)
 
                 if not (x1 <= glint_x < x2 and y1 <= glint_y < y2):
+                    FRAME_COLOR = FRAME_WARNING
                     # print(f"Invalid glint center at img {img_idx}, rect {patch_idx}: ({glint_x}, {glint_y})")
-                    glint_x, glint_y = None, None  # 标记为无效
+                    glint_x, glint_y = None, None  # invalid glint
                 else:
                     glint_x, glint_y = int(glint_x - x1), int(glint_y - y1)
 
-                # 绘制瞳孔中心 (红色)，仅当位置有效
+                # draw pupil center
                 if pupil_x is not None and pupil_y is not None:
                     cv2.circle(patch, (pupil_x, pupil_y), 5, (0, 0, 255), -1)
-                # 绘制反光点 (绿色)，仅当位置有效
+                # draw glint
                 if glint_x is not None and glint_y is not None:
                     cv2.circle(patch, (glint_x, glint_y), 3, (0, 255, 0), -1)
 
-                # 绘制绿色方框围绕整个 patch
-                cv2.rectangle(patch, (0, 0), (patch.shape[1] - 1, patch.shape[0] - 1), (0, 255, 0), 6)
+                # draw rect on image
+                cv2.rectangle(patch, (0, 0), (patch.shape[1] - 1, patch.shape[0] - 1), FRAME_COLOR, 6)
 
                 patches.append(patch)
             eye_patches.append(patches)
 
-        # 假设 eye_patches 已存在，每个元素是 (h, w, 3) 的裁剪图像
         margin = 10
-        for canvas_idx, canvases in enumerate(eyes_canvas):  # 遍历左右眼 canvas
-            for rect_idx, canvas in enumerate(canvases):  # 遍历每个 eye canvas
-                # 获取当前 eye_patch 和 canvas 尺寸
+        for canvas_idx, canvases in enumerate(eyes_canvas):
+            for rect_idx, canvas in enumerate(canvases):
                 if canvas_idx >= len(eye_patches) or rect_idx >= len(eye_patches[canvas_idx]):
-                    continue  # 跳过无效的 patch
+                    continue  # skip invalid patch
                 patch = eye_patches[canvas_idx][rect_idx]
                 patch_h, patch_w, _ = patch.shape
                 canvas_h, canvas_w, _ = canvas.shape
 
-                # 计算缩放比例，保持长宽比
+                # calculate scale
                 scale = min((canvas_w - 2 * margin) / patch_w, (canvas_h - 2 * margin) / patch_h)
                 new_w, new_h = int(patch_w * scale), int(patch_h * scale)
 
-                # 缩放 eye_patch
+                # resize eye_patch
                 resized_patch = cv2.resize(patch, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
-                # 计算居中位置
+                # calculate patch center
                 start_x = (canvas_w - new_w) // 2
                 start_y = (canvas_h - new_h) // 2
 
-                # 将缩放后的 eye_patch 绘制到 canvas 上
+                # draw scaled patch on canvas
                 eyes_canvas[canvas_idx][rect_idx][start_y:start_y + new_h, start_x:start_x + new_w] = resized_patch
-        # eyes_canvas 现在包含了居中绘制的 eye_patches
 
-        for idx in range(2):  # 遍历左右图像
-            # 获取原始图片和眼图
+
+        for idx in range(2):
             original_img = imgs[idx]
             eye1_canvas, eye2_canvas = eyes_canvas[idx]
             cv2.rectangle(eye1_canvas, (0, 0), (eye1_canvas.shape[1] - 1, eye1_canvas.shape[0] - 1), (0, 255, 0), 2)
             cv2.rectangle(eye2_canvas, (0, 0), (eye2_canvas.shape[1] - 1, eye2_canvas.shape[0] - 1), (0, 255, 0), 2)
 
-            # 绘制绿色框框到原始图片
             cv2.rectangle(original_img, (0, 0), (original_img.shape[1] - 1, original_img.shape[0] - 1), FRAME_COLOR,
                           FRAME_WIDTH)
 
-            # 将原始图片放到 preview_imgs 的上半部分
             preview_imgs[idx, 0:IMG_HEIGHT, 0:IMG_WIDTH, :] = original_img
 
-            # 计算眼图的目标尺寸
             canvas_h, canvas_w, _ = eye1_canvas.shape
-            target_h, target_w = canvas_h, canvas_w  # 保持 canvas 的原始大小
+            target_h, target_w = canvas_h, canvas_w
 
-            # 合并两个眼图，并绘制绿色框框
+            # Merge two eye patches
             combined_canvas = np.zeros((target_h, 2 * target_w, 3), dtype=np.uint8)
             combined_canvas[:, 0:target_w, :] = eye1_canvas
             combined_canvas[:, target_w:2 * target_w, :] = eye2_canvas
-            # cv2.rectangle(combined_canvas, (0, 0), (combined_canvas.shape[1] - 1, combined_canvas.shape[0] - 1),
-            #               FRAME_COLOR, FRAME_WIDTH)
 
-            # 将眼图合并到 preview_imgs 的下半部分
             preview_imgs[idx, IMG_HEIGHT:IMG_HEIGHT + target_h, 0:2 * target_w, :] = combined_canvas
-
-        # for n, img in enumerate(imgs):
-        #     for m, eye_rect in enumerate(rects[n]):
-        #         x, y, w, h = eye_rect
-        #         cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 4)
-        #
-        #         pupil_center = tuple(map(int, pupil_center_list[n][m]))
-        #         glint_center = tuple(map(int, glint_center_list[n][m]))
-        #
-        #         # cv2.circle(img, pupil_center, 3, (0, 255, 0), -1)
-        #         # cv2.circle(img, glint_center, 3, (0, 255, 0), -1)
-        #         cv2.drawMarker(img, pupil_center, (0, 255, 255), markerSize=20, markerType=cv2.MARKER_DIAMOND,
-        #                        thickness=2)
-        #         cv2.drawMarker(img, glint_center, (255, 0, 0), markerSize=30, markerType=cv2.MARKER_CROSS, thickness=2)
-
-        # preview_imgs[0] = imgs[0]
-        # preview_imgs[1] = imgs[1]
 
         return preview_imgs
 

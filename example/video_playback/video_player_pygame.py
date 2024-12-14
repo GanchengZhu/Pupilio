@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+
 # _*_ coding: utf-8 _*_
 
 # Copyright (c) 2024, Hangzhou Deep Gaze Science and Technology Co., Ltd
