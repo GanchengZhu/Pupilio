@@ -214,7 +214,7 @@ class DefaultConfig:
         """
         Update the instructions and legends based on the specified language.
 
-        Parameters:
+        Args:
             lang (str): The language to update to. Supported values are:
                 - 'zh-CN': Updates instructions to Simplified Chinese.
                 - 'zh-HK': Updates instructions to Traditional Chinese.
