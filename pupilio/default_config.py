@@ -47,27 +47,25 @@ class DefaultConfig:
     Includes settings for file paths, hyperparameters, and resources like images and audio.
 
     Attributes:
-        - Current Directory:
-            Stores the absolute path of the current file's directory for constructing resource file paths.
 
-        - Filter Hyperparameters:
+        Filter Hyperparameters:
             `look_ahead` (int): Look-ahead steps for predicting target position.
 
-        - Calibration Resources:
+        Calibration Resources:
             `cali_target_beep` (str): Path to the beep sound used during calibration.
             `cali_frowning_face_img` (str): Path to the frowning face image used during calibration.
             `cali_smiling_face_img` (str): Path to the smiling face image used during calibration.
             `cali_target_img` (str): Path to the windmill image used as the calibration target.
 
-        - Calibration Target Settings:
+        Calibration Target Settings:
             `cali_target_img_maximum_size` (int): Maximum size of the calibration target image.
             `cali_target_img_minimum_size` (int): Minimum size of the calibration target image.
             `cali_target_animation_frequency` (int): Frequency of the calibration target animation (in Hz).
 
-        - Calibration Mode:
+        Calibration Mode:
             `cali_mode` (CalibrationMode): Specifies the calibration mode, default is TWO_POINTS.
 
-        - Kappa Angle Verification:
+        Kappa Angle Verification:
             `enable_kappa_verification` (int): Verification of the kappa angle after calibration. Default is 1.
                                          When this value is 0, the verification of the kappa angle after calibration
                                          is disabled, suitable for users with strabismus.
@@ -92,15 +90,17 @@ class DefaultConfig:
             - `legend_right_eye` (str): Legend for right eye gaze.
             - `instruction_calibration_over` (str): Instruction for continuing after validation.
             - `instruction_recalibration` (str): Instruction for initiating recalibration.
-    """
 
+        Calibration Previewing:
+            - `face_previewing` (int): Whether show calibration previewing,default is 1.
+    """
 
     def __init__(self):
         # Get the absolute path of the current file's directory
         self._current_dir = os.path.abspath(os.path.dirname(__file__))
 
         # Filter hyperparameters
-        self.look_ahead = 2  # Look-ahead steps for predicting target position
+        self.look_ahead: int = 2  # Look-ahead steps for predicting target position
 
         # Font settings
         # self.font_name = "Microsoft YaHei UI Light"  # Font used for displaying text
@@ -256,7 +256,7 @@ class DefaultConfig:
         self.instruction_head_center = "请将头移动到方框中央"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = "屏幕上会出现两个点，请依次注视这些点\n"\
+        self.instruction_enter_calibration = "屏幕上会出现两个点，请依次注视这些点\n" \
                                              "按回车键或鼠标左键(或触击屏幕)开始校准"
 
         self.instruction_hands_free_calibration = (
@@ -287,7 +287,7 @@ class DefaultConfig:
         self.instruction_head_center = "Move your head to the center of the box"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = "Two points will appear on screen, please look at them in sequence\n"\
+        self.instruction_enter_calibration = "Two points will appear on screen, please look at them in sequence\n" \
                                              "Press Enter or left-click the mouse (or touch the screen) to start calibration"
 
         self.instruction_hands_free_calibration = (
@@ -318,7 +318,7 @@ class DefaultConfig:
         self.instruction_head_center = "Veuillez centrer votre tête dans l'image"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = "Deux points apparaîtront à l'écran, veuillez les regarder dans l'ordre\n"\
+        self.instruction_enter_calibration = "Deux points apparaîtront à l'écran, veuillez les regarder dans l'ordre\n" \
                                              "Appuyez sur Entrée ou cliquez à gauche (cliquez sur l'écran) pour commencer l'étalonnage"
 
         self.instruction_hands_free_calibration = (
@@ -382,7 +382,7 @@ class DefaultConfig:
         self.instruction_head_center = "請將頭移到畫面中央"
 
         # Calibration entry instructions
-        self.instruction_enter_calibration = "畫面上會出現兩個點，請按順序注視這些點\n"\
+        self.instruction_enter_calibration = "畫面上會出現兩個點，請按順序注視這些點\n" \
                                              "按下回車鍵或鼠標左鍵(點擊螢幕)開始校準"
 
         self.instruction_hands_free_calibration = (
