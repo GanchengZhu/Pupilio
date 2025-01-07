@@ -653,9 +653,10 @@ class Pupilio:
         IMG_HEIGHT, IMG_WIDTH = 1024, 1280  # Dimensions of the preview images
         left_img = cv2.cvtColor(left_img, cv2.COLOR_GRAY2BGR)
         right_img = cv2.cvtColor(right_img, cv2.COLOR_GRAY2BGR)
-        FRAME_COLOR = (0, 255, 0)  #
+
         FRAME_WARNING = (255, 0, 0)  # WARNING FRAME
-        FRAME_SUCCESS = (255, 0, 0)  # SUCCESS
+        FRAME_SUCCESS = (0, 255, 0)  # SUCCESS
+        FRAME_COLOR = FRAME_SUCCESS
         FRAME_WIDTH = 8
 
         imgs = [left_img, right_img]
@@ -756,8 +757,8 @@ class Pupilio:
         for idx in range(2):
             original_img = imgs[idx]
             eye1_canvas, eye2_canvas = eyes_canvas[idx]
-            cv2.rectangle(eye1_canvas, (0, 0), (eye1_canvas.shape[1] - 1, eye1_canvas.shape[0] - 1), (0, 255, 0), 2)
-            cv2.rectangle(eye2_canvas, (0, 0), (eye2_canvas.shape[1] - 1, eye2_canvas.shape[0] - 1), (0, 255, 0), 2)
+            cv2.rectangle(eye1_canvas, (0, 0), (eye1_canvas.shape[1] - 1, eye1_canvas.shape[0] - 1), FRAME_COLOR, 2)
+            cv2.rectangle(eye2_canvas, (0, 0), (eye2_canvas.shape[1] - 1, eye2_canvas.shape[0] - 1), FRAME_COLOR, 2)
 
             cv2.rectangle(original_img, (0, 0), (original_img.shape[1] - 1, original_img.shape[0] - 1), FRAME_COLOR,
                           FRAME_WIDTH)
