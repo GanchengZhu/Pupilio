@@ -609,6 +609,8 @@ class CalibrationUI(object):
         if _status == ET_ReturnCode.ET_CALI_CONTINUE.value:
             pass
         elif _status == ET_ReturnCode.ET_CALI_NEXT_POINT.value:
+            # print("NEXT POINT")
+            # print(self._calibration_point_index)
             if self._calibration_point_index + 1 == len(self._calibrationPoint):
                 self._phase_calibration = False
                 self._validation_preparing = False
@@ -631,6 +633,7 @@ class CalibrationUI(object):
             if (self.config.calibration_listener is not None) and (
                     isinstance(self.config.calibration_listener, CalibrationListener)):
                 self.config.calibration_listener.on_calibration_target_onset(self._calibration_point_index)
+
         elif _status == ET_ReturnCode.ET_SUCCESS.value:
             self._phase_calibration = False
             self._validation_preparing = False
@@ -824,6 +827,7 @@ class CalibrationUI(object):
         self._draw_text_center(_text)
 
     def draw(self, validate=False, bg_color=(0, 0, 0)):
+        # self._pupil_io._recalibration()
         self.initialize_variables()
         self._need_validation = validate
         _calibration_preparing_wait = 1
@@ -866,6 +870,7 @@ class CalibrationUI(object):
                 self._txt.height = 32
                 self._txt.font = self._font
                 self._pupil_io._recalibration()
+                # print("recalibration")
                 self.draw(self._need_validation, bg_color=bg_color)
 
             # self._fps_clock.tick(self._fps)
@@ -897,9 +902,9 @@ class CalibrationUI(object):
             self._screen.flip()
 
         # callback: on_calibration_over
-        if (self.config.calibration_listener is not None) and (
-                isinstance(self.config.calibration_listener, CalibrationListener)):
-            self.config.calibration_listener.on_calibration_over()
+        # if (self.config.calibration_listener is not None) and (
+        #         isinstance(self.config.calibration_listener, CalibrationListener)):
+        #     self.config.calibration_listener.on_calibration_over()
 
     @deprecated("1.1.2")
     def draw_hands_free(self, validate=False, bg_color=(1, 1, 1)):

@@ -576,10 +576,26 @@ class CalibrationUI(object):
         if _status == ET_ReturnCode.ET_CALI_CONTINUE.value:
             pass
         elif _status == ET_ReturnCode.ET_CALI_NEXT_POINT.value:
-            self._calibration_point_index += 1
-            self._calibration_timer = 0
-            self._sound.stop()
-            self._sound.play()
+            # print("NEXT POINT")
+            # print(self._calibration_point_index)
+            if self._calibration_point_index + 1 == len(self._calibrationPoint):
+                self._phase_calibration = False
+                self._validation_preparing = False
+                if self._need_validation and not self._hands_free:
+                    self._validation_preparing = True
+                    self._phase_validation = False
+                elif self._hands_free and self._need_validation:
+                    self._phase_calibration = False
+                    self._validation_preparing = False
+                    self._phase_validation = True
+                else:
+                    self._exit = True
+                    self.graphics_finished = True
+            else:
+                self._calibration_point_index += 1
+                self._calibration_timer = 0
+                self._sound.stop()
+                self._sound.play()
 
             # callback: on_calibration_target_onset
             if (self.config.calibration_listener is not None) and (
@@ -763,6 +779,7 @@ class CalibrationUI(object):
         self._draw_text_center(_text)
 
     def draw(self, validate=False, bg_color=(255, 255, 255)):
+        self._pupil_io._recalibration()
         self.initialize_variables()
         self._need_validation = validate
         while not self._exit:
@@ -814,7 +831,8 @@ class CalibrationUI(object):
                     elif _user_response_recali and self._drawing_validation_result:
                         self._phase_validation = False
                         self._drawing_validation_result = False
-                        self._pupil_io._recalibration()
+                        # self._pupil_io._recalibration()
+                        # print("recalibration")
                         self.draw(self._need_validation, bg_color=bg_color)
 
                     elif _keyboard_quit:
@@ -851,9 +869,9 @@ class CalibrationUI(object):
         self._sound.stop()
 
         # callback: on_calibration_over
-        if (self.config.calibration_listener is not None) and (
-                isinstance(self.config.calibration_listener, CalibrationListener)):
-            self.config.calibration_listener.on_calibration_over()
+        # if (self.config.calibration_listener is not None) and (
+        #         isinstance(self.config.calibration_listener, CalibrationListener)):
+        #     self.config.calibration_listener.on_calibration_over()
 
     def draw_hands_free(self, validate=False, bg_color=(255, 255, 255)):
         self.initialize_variables()

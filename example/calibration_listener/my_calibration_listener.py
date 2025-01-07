@@ -14,9 +14,6 @@ class MyListener(CalibrationListener):
     def on_calibration_target_onset(self, point_index):
         print(f"target onset with the index of {point_index}")
 
-    def on_calibration_over(self):
-        print("on_calibration_over")
-
 
 if __name__ == '__main__':
     # use a custom config file to control the tracker

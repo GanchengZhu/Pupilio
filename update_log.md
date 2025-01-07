@@ -1,5 +1,11 @@
 # Pupilio SDK Update Log
 
+## Version 1.2.4 (Build 1) - 2025-01-07
+
+- Fixed a potential crash bug in pygame calibration.
+- Fixed an issue with the `CalibrationListener` callback.
+- Improved the calibration UI.
+
 ## Version 1.2.3 (Build 1) - 2024-12-12
 
 - Added `enable_kappa_verify`, `enable_debug`, and `log_dir` to `DefaultConfig`.
