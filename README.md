@@ -24,7 +24,7 @@
   </a>
 </div>
 
-[Pupil.IO](https://www.deep-gaze.com/) is a high-performance, high-speed, and high-precision eye-tracking system designed by Hangzhou Shenning Technology Co., Ltd. It offers high sampling rates and precise eye movement data, making it a valuable tool for scientific and clinical applications.
+[Pupil.IO](https://www.deep-gaze.com/) is a high-performance, high-speed, and high-precision eye-tracking system designed by [Hangzhou Shenning Technology Co., Ltd] (https://www.deep-gaze.com/). It offers high sampling rates and precise eye movement data, making it a valuable tool for scientific and clinical applications.
 
 ### Specifications of Eye Tracker
 
