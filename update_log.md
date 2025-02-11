@@ -1,5 +1,10 @@
 # Pupilio SDK Update Log
 
+## Version 1.2.5 (Build 1) - 2025-02-11
+
+- Fix native library bugs.
+
+
 ## Version 1.2.4 (Build 1) - 2025-01-07
 
 - Fixed a potential crash bug in pygame calibration.
