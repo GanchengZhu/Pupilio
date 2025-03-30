@@ -75,7 +75,7 @@ class CalibrationUI(object):
             else:
                 _font_name = pygame.font.get_fonts()[0]
 
-            self._font = pygame.font.SysFont(_font_name, 28, bold=False, italic=False)
+            self._font = pygame.font.SysFont(_font_name, 32, bold=False, italic=False)
             self._error_text_font = pygame.font.SysFont(_font_name, 20, bold=False, italic=False)
             self._instruction_font = pygame.font.SysFont(_font_name, 24, bold=False, italic=False)
 
@@ -112,15 +112,15 @@ class CalibrationUI(object):
 
         # audio path
         self._beep_sound_path = self.config.cali_target_beep
-        self._calibration_instruction_sound_path = os.path.join(self._current_dir, "asset",
-                                                                "calibration_instruction.wav")
+        # self._calibration_instruction_sound_path = os.path.join(self._current_dir, "asset",
+        #                                                         "calibration_instruction.wav")
 
         self._adjust_position_sound_path = os.path.join(self._current_dir, "asset", "adjust_position.wav")
 
         # load audio files
         pygame.mixer.init()
         self._sound = pygame.mixer.Sound(self._beep_sound_path)
-        self._cali_ins_sound = pygame.mixer.Sound(self._calibration_instruction_sound_path)
+        self._cali_ins_sound = pygame.mixer.Sound(self.config.calibration_instruction_sound_path)
 
         self._just_pos_sound = pygame.mixer.Sound(self._adjust_position_sound_path)
 
@@ -258,9 +258,10 @@ class CalibrationUI(object):
         self._calibration_point_index = 0
         self._drawing_validation_result = False
         self._hands_free = False
-        self._hands_free_adjust_head_wait_time = 12  # 3
+        self._hands_free_adjust_head_wait_time = 5  # 3
         self._hands_free_adjust_head_start_timestamp = 0
         self._validation_finished_timer = 0
+
 
     def initialize_variables(self):
         """Initialize variables for plotting and visualization."""
@@ -284,7 +285,7 @@ class CalibrationUI(object):
         self._calibration_point_index = 0
         self._drawing_validation_result = False
         self._hands_free = False
-        self._hands_free_adjust_head_wait_time = 12  # 3
+        self._hands_free_adjust_head_wait_time = 10  # 3
         self._hands_free_adjust_head_start_timestamp = 0
         self._validation_finished_timer = 0
 
@@ -626,9 +627,8 @@ class CalibrationUI(object):
         _index = int(time_elapsed // (1 / (self._animation_frequency * 10))) % 10
         _width = self._animation_size[_index][0]
         _height = self._animation_size[_index][1]
-        self._screen.blit(self._animation_list[_index], (
-            point[0] - _width // 2, point[1] - _height // 2
-        ))
+        self._screen.blit(self._animation_list[_index],
+            (point[0] - _width // 2, point[1] - _height // 2))
 
     def _draw_previewer(self):
         _left_img, _right_img = self._pupil_io.get_preview_images()
@@ -646,7 +646,7 @@ class CalibrationUI(object):
 
     def _draw_adjust_position(self):
         if (not self._just_pos_sound_once):
-            # self._just_pos_sound.play()
+            self._just_pos_sound.play()
             self._just_pos_sound_once = True
             # time.sleep(5)
 
@@ -761,9 +761,11 @@ class CalibrationUI(object):
             _center_x = self._screen_width // 2
             _center_y = self._screen_height // 2
             self._draw_segment_text(_text, _center_x, _center_y)
-            _rest = f"{(10 - _time_elapsed)}"
+            _rest = f"{int(10 - _time_elapsed)}"
             _w = self._clock_resource_dict['.'].get_width()
             _h = self._clock_resource_dict['.'].get_height()
+
+            print(_rest)
 
             for n, _character in enumerate(_rest):
                 # _x = _center_x - (3 - n) * _w

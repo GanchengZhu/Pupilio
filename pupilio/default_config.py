@@ -106,6 +106,12 @@ class DefaultConfig:
         # self.font_name = "Microsoft YaHei UI Light"  # Font used for displaying text
 
         # Calibration resource file paths
+        # calibration instruction wav file
+        self.calibration_instruction_sound_path = os.path.join(
+            self._current_dir,
+            "asset",
+            "calibration_instruction.wav")  # Path to the calibration instruction wav file
+
         # Sound file for target beep during calibration
         self.cali_target_beep = os.path.join(
             self._current_dir,
