@@ -105,7 +105,7 @@ class CalibrationUI(object):
         self._calibrationPoint = self._pupil_io.calibration_points
 
         # constant calibration stuffs
-        self._face_in_rect = pygame.Rect(660, 240, 600, 600) # x,y, w, h
+        self._face_in_rect = pygame.Rect(660, 240, 600, 600)  # x,y, w, h
 
         # constant library path
         self._current_dir = os.path.abspath(os.path.dirname(__file__))
@@ -212,10 +212,10 @@ class CalibrationUI(object):
         self._LEFT_PREVIEWER_POS = [
             self._PREVIEWER_IMG_WIDTH // 2 + 79
             ,
-            self._screen_height//2]
+            self._screen_height // 2]
         self._RIGHT_PREVIEWER_POS = [
             self._screen_width - self._PREVIEWER_IMG_WIDTH // 2 - 79,
-            self._screen_height//2]
+            self._screen_height // 2]
 
         # self._LEFT_PREVIEWER_POS = [
         #     (self._screen_width - self._PREVIEWER_IMG_WIDTH) // 2 - 5,
@@ -261,7 +261,6 @@ class CalibrationUI(object):
         self._hands_free_adjust_head_wait_time = 5  # 3
         self._hands_free_adjust_head_start_timestamp = 0
         self._validation_finished_timer = 0
-
 
     def initialize_variables(self):
         """Initialize variables for plotting and visualization."""
@@ -600,7 +599,7 @@ class CalibrationUI(object):
 
             # callback: on_calibration_target_onset
             if (self.config.calibration_listener is not None) and (
-            isinstance(self.config.calibration_listener, CalibrationListener)):
+                    isinstance(self.config.calibration_listener, CalibrationListener)):
                 self.config.calibration_listener.on_calibration_target_onset(self._calibration_point_index)
 
         elif _status == ET_ReturnCode.ET_SUCCESS.value:
@@ -628,7 +627,7 @@ class CalibrationUI(object):
         _width = self._animation_size[_index][0]
         _height = self._animation_size[_index][1]
         self._screen.blit(self._animation_list[_index],
-            (point[0] - _width // 2, point[1] - _height // 2))
+                          (point[0] - _width // 2, point[1] - _height // 2))
 
     def _draw_previewer(self):
         _left_img, _right_img = self._pupil_io.get_preview_images()
