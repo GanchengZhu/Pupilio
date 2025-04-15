@@ -80,6 +80,13 @@ class CalibrationMode(IntEnum):
     FIVE_POINTS = 5
 
 
+class ActiveEye(IntEnum):
+    """Tracking left eye, right eye or both"""
+    LEFT_EYE = -1
+    RIGHT_EYE = 1
+    BINO_EYE = 0
+
+
 class TriggerHandler:
     def __init__(self):
         """

@@ -158,10 +158,12 @@ class Pupilio:
         ]
         self._et_native_lib.pupil_io_set_kappa_filter.argtypes = [ctypes.c_int]
         self._et_native_lib.pupil_io_set_log.argtypes = [ctypes.c_int, ctypes.c_char_p]
+        self._et_native_lib.pupil_io_set_eye_mode.argtypes = [ctypes.c_int]
 
         version = self._et_native_lib.pupil_io_get_version()
         print("Native Pupilio Version:", version.decode("gbk"))
-
+        # set tracking eye
+        self._et_native_lib.pupil_io_set_eye_mode(self.config.active_eye.value)
         # set filter parameter: look ahead
         self._et_native_lib.pupil_io_set_look_ahead(self.config.look_ahead)
         # set enable kappa verify

@@ -36,9 +36,8 @@
 
 import os
 from pathlib import Path
-
 from .callback import CalibrationListener
-from .misc import CalibrationMode
+from .misc import CalibrationMode, ActiveEye
 
 
 class DefaultConfig:
@@ -93,6 +92,9 @@ class DefaultConfig:
 
         Calibration Previewing:
             - `face_previewing` (int): Whether show calibration previewing,default is 1.
+
+        Active Eye:
+            - `active_eye` (str): Which one or two eyes you want to track.`
     """
 
     def __init__(self):
@@ -151,7 +153,7 @@ class DefaultConfig:
         self.enable_kappa_verification = 1
 
         # calibration listener
-        self.calibration_listener: CalibrationListener = None
+        self.calibration_listener: CalibrationListener = CalibrationListener()
 
         # save validation result
         self.enable_validation_result_saving = 1
@@ -201,6 +203,8 @@ class DefaultConfig:
         # show preview? 0=no, 1=yes
         self.face_previewing = 1
 
+        self.active_eye = ActiveEye.BINO_EYE
+
     @property
     def cali_mode(self):
         return self._cali_mode
@@ -215,6 +219,30 @@ class DefaultConfig:
             self._cali_mode = CalibrationMode.FIVE_POINTS  # Assuming FIVE_POINTS exists in CalibrationMode
         else:
             raise ValueError("Invalid calibration mode. Must be 2, 5, or a CalibrationMode instance.")
+
+    @property
+    def active_eye(self):
+        return self._active_eye
+
+    @active_eye.setter
+    def active_eye(self, mode):
+        if isinstance(mode, ActiveEye):
+            self._active_eye = mode
+        elif mode == -1:
+            self._active_eye = ActiveEye.LEFT_EYE
+        elif mode == 1:
+            self._active_eye = ActiveEye.RIGHT_EYE
+        elif mode == "left":
+            self._active_eye = ActiveEye.LEFT_EYE
+        elif mode == "right":
+            self._active_eye = ActiveEye.RIGHT_EYE
+        elif mode == 0:
+            self._active_eye = ActiveEye.BINO_EYE
+        elif mode == "bino":
+            self._active_eye = ActiveEye.BINO_EYE
+        else:
+            raise ValueError("Invalid tracking mode. Must be 0 (bino), -1 (left eye), "
+                             "1 (right eye), left, right, or bino.")
 
     def instruction_language(self, lang='zh-CN'):
         """
