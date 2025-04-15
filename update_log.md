@@ -1,6 +1,10 @@
 # Pupilio SDK Update Log
 
-## Version 1.2.6 (Build 1) - 2025-02-11
+## Version 1.2.7 (Build 1) - 2025-04-15
+
+- - Minor bug: fix `pupil_io_get_current_gaze` function.
+
+## Version 1.2.6 (Build 1) - 2025-03-30
 
 - Improve UI.
 
