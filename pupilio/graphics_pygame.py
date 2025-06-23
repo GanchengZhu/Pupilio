@@ -627,7 +627,7 @@ class CalibrationUI(object):
         _width = self._animation_size[_index][0]
         _height = self._animation_size[_index][1]
         self._screen.blit(self._animation_list[_index],
-                          (point[0] - _width // 2, point[1] - _height // 2))
+                          (int(point[0] - _width // 2), int(point[1] - _height // 2)))
 
     def _draw_previewer(self):
         _left_img, _right_img = self._pupil_io.get_preview_images()
@@ -755,7 +755,6 @@ class CalibrationUI(object):
 
         _time_elapsed = time.time() - self._preparing_hands_free_start
         if _time_elapsed <= 9.0:
-            # daikai@2024.04.23
             _text = self.config.instruction_hands_free_calibration  # "9秒钟后，屏幕上会出现几个点，请依次注视它们"
             _center_x = self._screen_width // 2
             _center_y = self._screen_height // 2
@@ -764,7 +763,7 @@ class CalibrationUI(object):
             _w = self._clock_resource_dict['.'].get_width()
             _h = self._clock_resource_dict['.'].get_height()
 
-            print(_rest)
+            # print(_rest)
 
             for n, _character in enumerate(_rest):
                 # _x = _center_x - (3 - n) * _w

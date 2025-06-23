@@ -1,8 +1,14 @@
 # Pupilio SDK Update Log
 
+## Version 1.2.8 (Build 1) - 2025-06-23
+
+- Fix `invalid destination position for blit` error in Line 630 of `graphics_pygame.py`.
+- Support single eye gaze tracking.
+- Adjust the output of optical axes.
+
 ## Version 1.2.7 (Build 1) - 2025-04-15
 
-- - Minor bug: fix `pupil_io_get_current_gaze` function.
+- Minor bug: fix `pupil_io_get_current_gaze` function.
 
 ## Version 1.2.6 (Build 1) - 2025-03-30
 
