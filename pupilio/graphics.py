@@ -181,11 +181,9 @@ class CalibrationUI(object):
         # a beep that goes with the calibration target
         self._sound = sound.Sound(self.config.cali_target_beep)
         # calibration instructions
-        self._cali_ins_sound = sound.Sound(
-            os.path.join(self._current_dir, "asset", "calibration_instruction.wav"))
+        self._cali_ins_sound = sound.Sound(self.config.calibration_instruction_sound_path)
         # head position adjustment instructions
-        self._just_pos_sound = sound.Sound(
-            os.path.join(self._current_dir, "asset", "adjust_position.wav"))
+        self._just_pos_sound = sound.Sound(self.config.calibration_adjust_position_sound_path)
         # play sound times
         self._just_pos_sound_once = False
 

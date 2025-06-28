@@ -115,14 +115,14 @@ class CalibrationUI(object):
         # self._calibration_instruction_sound_path = os.path.join(self._current_dir, "asset",
         #                                                         "calibration_instruction.wav")
 
-        self._adjust_position_sound_path = os.path.join(self._current_dir, "asset", "adjust_position.wav")
+        # self._adjust_position_sound_path = os.path.join(self._current_dir, "asset", "adjust_position.wav")
 
         # load audio files
         pygame.mixer.init()
         self._sound = pygame.mixer.Sound(self._beep_sound_path)
         self._cali_ins_sound = pygame.mixer.Sound(self.config.calibration_instruction_sound_path)
 
-        self._just_pos_sound = pygame.mixer.Sound(self._adjust_position_sound_path)
+        self._just_pos_sound = pygame.mixer.Sound(self.config.calibration_adjust_position_sound_path)
 
         self._just_pos_sound_once = False
 
