@@ -284,7 +284,7 @@ class CalibrationUI(object):
         self._calibration_point_index = 0
         self._drawing_validation_result = False
         self._hands_free = False
-        self._hands_free_adjust_head_wait_time = 10  # 3
+        self._hands_free_adjust_head_wait_time = 11  # 3
         self._hands_free_adjust_head_start_timestamp = 0
         self._validation_finished_timer = 0
 
@@ -411,27 +411,38 @@ class CalibrationUI(object):
                 _right_eye_distances = self._validation_right_eye_distance_store[idx]  # n * 1
                 _ground_truth_point = self._validation_points[idx]
 
-                _left_res = self._calculator.calculate_error_by_sliding_window(
-                    gt_point=_ground_truth_point,
-                    es_points=_left_samples,
-                    distances=_left_eye_distances
-                )
-                _right_res = self._calculator.calculate_error_by_sliding_window(
-                    gt_point=_ground_truth_point,
-                    es_points=_right_samples,
-                    distances=_right_eye_distances
-                )
 
-                if (_left_res["min_error"] > self._error_threshold
-                        or _right_res["min_error"] > self._error_threshold):
-                    logging.info(f"Recalibration point index: {idx}, Left error: {_left_res['min_error']}, "
-                                 f"Right error: {_right_res['min_error']}")
-                    # 如果误差大于设定值该点的所有数据清空，并且重新加入校准
-                    self._validation_left_eye_distance_store[idx] = []
-                    self._validation_left_sample_store[idx] = []
-                    self._validation_right_eye_distance_store[idx] = []
-                    self._validation_right_sample_store[idx] = []
-                    self._calibration_drawing_list.append(idx)
+                if self._pupil_io.config.active_eye in [-1, 'left', 0, 'bino']:
+                    _left_res = self._calculator.calculate_error_by_sliding_window(
+                        gt_point=_ground_truth_point,
+                        es_points=_left_samples,
+                        distances=_left_eye_distances
+                    )
+
+                    if _left_res["min_error"] > self._error_threshold:
+                        logging.info(f"Recalibration point index: {idx}, Left error: {_left_res['min_error']}")
+                        # 如果误差大于设定值该点的所有数据清空，并且重新加入校准
+                        self._validation_left_eye_distance_store[idx] = []
+                        self._validation_left_sample_store[idx] = []
+                        self._validation_right_eye_distance_store[idx] = []
+                        self._validation_right_sample_store[idx] = []
+                        self._calibration_drawing_list.append(idx)
+
+                if self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']:
+                    _right_res = self._calculator.calculate_error_by_sliding_window(
+                        gt_point=_ground_truth_point,
+                        es_points=_right_samples,
+                        distances=_right_eye_distances
+                    )
+
+                    if _right_res["min_error"] > self._error_threshold:
+                        logging.info(f"Recalibration point index: {idx}, Right error: {_right_res['min_error']}")
+                        # 如果误差大于设定值该点的所有数据清空，并且重新加入校准
+                        self._validation_left_eye_distance_store[idx] = []
+                        self._validation_left_sample_store[idx] = []
+                        self._validation_right_eye_distance_store[idx] = []
+                        self._validation_right_sample_store[idx] = []
+                        self._calibration_drawing_list.append(idx)
 
         if not self._calibration_drawing_list:  # 不需要再次校准了
             self._n_validation = 2
@@ -475,7 +486,7 @@ class CalibrationUI(object):
                     _right_eye_distances = self._validation_right_eye_distance_store[idx]  # n * 1
                     _ground_truth_point = self._validation_points[idx]
 
-                    if _left_samples:
+                    if self._pupil_io.config.active_eye in [-1, 'left', 0, 'bino']:
                         # modified it by slide window
                         # _avg_left_eye_distance = np.mean(_left_eye_distances)
                         # _avg_left_eye_sample = np.mean(_left_samples, axis=0)
@@ -490,7 +501,7 @@ class CalibrationUI(object):
                             self._draw_error_text(_res["min_error"], _ground_truth_point,
                                                   is_left=True)
 
-                    if _right_samples:
+                    if self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']:
                         _res = self._calculator.calculate_error_by_sliding_window(
                             gt_point=_ground_truth_point,
                             es_points=_right_samples,
@@ -645,7 +656,8 @@ class CalibrationUI(object):
 
     def _draw_adjust_position(self):
         if (not self._just_pos_sound_once):
-            self._just_pos_sound.play()
+            if self._hands_free:
+                self._just_pos_sound.play()
             self._just_pos_sound_once = True
             # time.sleep(5)
 
@@ -655,6 +667,7 @@ class CalibrationUI(object):
         _start_time = time.time()
         _status, _face_position = self._pupil_io.face_position()
         _face_position = _face_position.tolist()
+
         logging.info(f'Get face position cost {(time.time() - _start_time):.4f} seconds.')
         logging.info(f'Face position: {str(_face_position)}')
 
@@ -663,10 +676,16 @@ class CalibrationUI(object):
         _face_pos_z = _face_position[2]  # Emulating face_pos.z for testing
 
         # face cartoon
+        # Update face point (righteye~=204, lefteye~=137, bino~=165)
+        if self._pupil_io.config.active_eye in [-1, 'left']:
+            _face_x_offset = 32
+        elif self._pupil_io.config.active_eye in [1, 'right']:
+            _face_x_offset = -32
+        else:
+            _face_x_offset = 0
 
-        # Update face point
-        _eyebrow_center_point[0] = 960 + (_face_pos_x - 172.08) * 10
-        _eyebrow_center_point[1] = 540 + (_face_pos_y - 96.79) * 10
+        _eyebrow_center_point[0] = self._screen.get_width()//2 + (_face_pos_x - 172.08 + _face_x_offset) * 10
+        _eyebrow_center_point[1] = self._screen.get_height()//2 + (_face_pos_y - 96.79) * 10
 
         # Update rectangle color based on face point inside the rectangle
         if self._face_in_rect.collidepoint(_eyebrow_center_point):
@@ -674,6 +693,7 @@ class CalibrationUI(object):
         else:
             _rectangle_color = self._RED
             _instruction_text = self.config.instruction_head_center
+            # _instruction_text = str(_face_position)
 
         # Update face point color based on face position in Z-axis
         if _face_pos_z == 0:

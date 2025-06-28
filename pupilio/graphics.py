@@ -289,7 +289,7 @@ class CalibrationUI(object):
         self._calibration_point_index = 0
         self._drawing_validation_result = False
         self._hands_free = False
-        self._hands_free_adjust_head_wait_time = 3  # 3
+        self._hands_free_adjust_head_wait_time = 11  # 3
         self._hands_free_adjust_head_start_timestamp = 0
         self._validation_finished_timer = 0
 
@@ -444,28 +444,35 @@ class CalibrationUI(object):
                 # ground truth position in pygame coordinates
                 _ground_truth_point = self._to_pygame_coords(self._validation_points[idx])
 
-                _left_res = self._calculator.calculate_error_by_sliding_window(
-                    gt_point=_ground_truth_point,
-                    es_points=_left_samples,
-                    distances=_left_eye_distances
-                )
-                _right_res = self._calculator.calculate_error_by_sliding_window(
-                    gt_point=_ground_truth_point,
-                    es_points=_right_samples,
-                    distances=_right_eye_distances
-                )
+                if self._pupil_io.config.active_eye in [-1, 'left', 0, 'bino']:
+                    _left_res = self._calculator.calculate_error_by_sliding_window(
+                        gt_point=_ground_truth_point,
+                        es_points=_left_samples,
+                        distances=_left_eye_distances
+                    )
+                    # if the validation gaze error is greater than 2 degree, repeat this point
+                    if _left_res["min_error"] > self._error_threshold:
+                        logging.info(f"Recalibration point index: {idx}, Left error: {_left_res['min_error']}")
+                        self._validation_left_eye_distance_store[idx] = []
+                        self._validation_left_sample_store[idx] = []
+                        self._validation_right_eye_distance_store[idx] = []
+                        self._validation_right_sample_store[idx] = []
+                        self._calibration_drawing_list.append(idx)
 
-                # if the validation gaze error is greater than 2 degree, repeat this point
-                if (_left_res["min_error"] > self._error_threshold or
-                        _right_res["min_error"] > self._error_threshold):
-                    logging.info(f"Recalibration point index: {idx}, Left error: {_left_res['min_error']}, "
-                                 f"Right error: {_right_res['min_error']}")
-
-                    self._validation_left_eye_distance_store[idx] = []
-                    self._validation_left_sample_store[idx] = []
-                    self._validation_right_eye_distance_store[idx] = []
-                    self._validation_right_sample_store[idx] = []
-                    self._calibration_drawing_list.append(idx)
+                if self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']:
+                    _right_res = self._calculator.calculate_error_by_sliding_window(
+                        gt_point=_ground_truth_point,
+                        es_points=_right_samples,
+                        distances=_right_eye_distances
+                    )
+                    # if the validation gaze error is greater than 2 degree, repeat this point
+                    if _right_res["min_error"] > self._error_threshold:
+                        logging.info(f"Recalibration point index: {idx}, Right error: {_right_res['min_error']}")
+                        self._validation_left_eye_distance_store[idx] = []
+                        self._validation_left_sample_store[idx] = []
+                        self._validation_right_eye_distance_store[idx] = []
+                        self._validation_right_sample_store[idx] = []
+                        self._calibration_drawing_list.append(idx)
 
         # if all validation have been completed, update the _n_validation status
         if not self._calibration_drawing_list:
@@ -518,7 +525,7 @@ class CalibrationUI(object):
                     # must convert the validation target position into Pygame coordinates for error calculation
                     _ground_truth_point = self._to_pygame_coords(self._validation_points[idx])
 
-                    if _left_samples:
+                    if self._pupil_io.config.active_eye in [-1, 'left', 0, 'bino']:
                         # modified it by slide window
                         # _avg_left_eye_distance = np.mean(_left_eye_distances)
                         # _avg_left_eye_sample = np.mean(_left_samples, axis=0)
@@ -530,7 +537,7 @@ class CalibrationUI(object):
                         if _res:
                             self._draw_error_line(_res["gt_point"], _res["min_error_es_point"], self._CRIMSON)
                             self._draw_error_text(_res["min_error"], _res["gt_point"], is_left=True)
-                    if _right_samples:
+                    if self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']:
                         _res = self._calculator.calculate_error_by_sliding_window(
                             gt_point=_ground_truth_point,
                             es_points=_right_samples,
@@ -687,7 +694,8 @@ class CalibrationUI(object):
 
     def _draw_adjust_position(self):
         if (not self._just_pos_sound_once):
-            # self._just_pos_sound.play()
+            if self._hands_free:
+                self._just_pos_sound.play()
             self._just_pos_sound_once = True
             # time.sleep(5)
 
@@ -704,8 +712,15 @@ class CalibrationUI(object):
         _face_pos_z = _face_position[2]  # Emulating face_pos.z for testing
 
         # face cartoon
-        # Update face point
-        _eyebrow_center_point[0] = (_face_pos_x - 172.08) * 10
+        # Update face point (righteye~=204, lefteye~=137, bino~=165)
+        if self._pupil_io.config.active_eye in [-1, 'left']:
+            _face_x_offset = 32
+        elif self._pupil_io.config.active_eye in [1, 'right']:
+            _face_x_offset = -32
+        else:
+            _face_x_offset = 0
+
+        _eyebrow_center_point[0] = (_face_pos_x - 172.08 + _face_x_offset) * 10
         _eyebrow_center_point[1] = -(_face_pos_y - 96.79) * 10
 
         # Update rectangle color based on face point inside the rectangle
@@ -806,18 +821,12 @@ class CalibrationUI(object):
         _time_elapsed = time.time() - self._preparing_hands_free_start
         if _time_elapsed <= 9.0:
             _text = self.config.instruction_hands_free_calibration
-
             self._draw_segment_text(_text, 0, 0)
-            _rest = f"{(10 - _time_elapsed)}"
-            _w = self._clock_resource_dict['.'].width
-            _h = self._clock_resource_dict['.'].height
-
+            _rest = f"{int(10 - _time_elapsed)}"
+            print(_rest)
             for n, _character in enumerate(_rest):
-                _center_x = self._screen_width // 2
-                _center_y = self._screen_height // 2
-                _x = _center_x - _w
-                _y = _center_y - 200
-                self._screen.blit(self._clock_resource_dict[_character], (_x + _w // 2, _y + _h // 2))
+                self._clock_resource_dict[_character].pos=(0, 200)
+                self._clock_resource_dict[_character].draw()
         else:
             self._calibration_preparing = False
             self._phase_calibration = True
@@ -937,3 +946,6 @@ class CalibrationUI(object):
                 break
 
             self._screen.flip()
+        self._sound.stop()
+        self._cali_ins_sound.stop()
+        self._just_pos_sound.stop()

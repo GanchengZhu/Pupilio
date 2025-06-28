@@ -685,6 +685,14 @@ class Pupilio:
             [glint_centers[4:6], glint_centers[6:8]]
         ]
 
+        # figure out which eye to mask for drawing purposes
+        if self.config.active_eye in [-1, 'left']:
+            patch_mask_index = 1
+        elif self.config.active_eye in [1, 'right']:
+            patch_mask_index = 0
+        else:
+            patch_mask_index = -1
+
         # clip eye_patches
         eye_patches = []
         for img_idx, img in enumerate(imgs):  # enumerate left and right images
@@ -694,26 +702,31 @@ class Pupilio:
                 # Ensure eye rect is valid
                 x1, y1, w, h = map(int, rect)
                 x2, y2 = x1 + w, y1 + h
-                if x1 < 0 or y1 < 0 or x2 > img_w or y2 > img_h or x1 >= x2 or y1 >= y2:
+                if x1 < 0 or y1 < 0 or x2 > img_w or y2 > img_h or x1 > x2 or y1 > y2:
                     # print(f"Invalid rect at img {img_idx}, rect {patch_idx}: {rect}")
                     FRAME_COLOR = FRAME_WARNING
                     continue  # skip invalid frame
 
-                patch = img[y1:y2, x1:x2]  # clip the eye patch
+                if w==0 or h==0: # empty eye-patch when tracking monocularly
+                    patch = img[0:96,0:96]
+                else:
+                    patch = img[y1:y2, x1:x2]  # clip the eye patch
 
                 # pupil center and glint coordinates
                 pupil_x, pupil_y = pupil_center_list[img_idx][patch_idx]
                 glint_x, glint_y = glint_center_list[img_idx][patch_idx]
 
                 if not (x1 <= pupil_x < x2 and y1 <= pupil_y < y2):
-                    FRAME_COLOR = FRAME_WARNING
+                    if not (patch_mask_index==patch_idx):
+                        FRAME_COLOR = FRAME_WARNING
                     # print(f"Invalid pupil center at img {img_idx}, rect {patch_idx}: ({pupil_x}, {pupil_y})")
                     pupil_x, pupil_y = None, None  # invalid pupil center
                 else:
                     pupil_x, pupil_y = int(pupil_x - x1), int(pupil_y - y1)
 
                 if not (x1 <= glint_x < x2 and y1 <= glint_y < y2):
-                    FRAME_COLOR = FRAME_WARNING
+                    if not (patch_mask_index==patch_idx):
+                        FRAME_COLOR = FRAME_WARNING
                     # print(f"Invalid glint center at img {img_idx}, rect {patch_idx}: ({glint_x}, {glint_y})")
                     glint_x, glint_y = None, None  # invalid glint
                 else:
@@ -727,7 +740,10 @@ class Pupilio:
                     cv2.circle(patch, (glint_x, glint_y), 3, (0, 255, 0), -1)
 
                 # draw rect on image
-                cv2.rectangle(patch, (0, 0), (patch.shape[1] - 1, patch.shape[0] - 1), FRAME_COLOR, 6)
+                if w==0 or h==0:
+                    pass
+                else:
+                    cv2.rectangle(patch, (0, 0), (patch.shape[1] - 1, patch.shape[0] - 1), FRAME_COLOR, 6)
 
                 patches.append(patch)
             eye_patches.append(patches)
@@ -753,7 +769,8 @@ class Pupilio:
                 start_y = (canvas_h - new_h) // 2
 
                 # draw scaled patch on canvas
-                eyes_canvas[canvas_idx][rect_idx][start_y:start_y + new_h, start_x:start_x + new_w] = resized_patch
+                if not rect_idx==patch_mask_index:
+                    eyes_canvas[canvas_idx][rect_idx][start_y:start_y + new_h, start_x:start_x + new_w] = resized_patch
 
 
         for idx in range(2):

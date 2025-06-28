@@ -30,7 +30,7 @@
 
 | Attribute                | Specification                                 |
 |--------------------------|-----------------------------------------------|
-| Sample Rate              | 200 Hz        |
+| Sample Rate              | 200 Hz                                        |
 | Accuracy                 | 0.5°                                          |
 | Precision                | 0.03°                                         |
 | Blink/Occlusion Recovery | 5 ms @ 200 Hz, 2.5 ms @ 400 Hz                |

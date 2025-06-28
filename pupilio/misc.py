@@ -176,12 +176,11 @@ class Calculator:
         :param distance: Distance between the pixels.
         :return: Error value calculated based on the provided formula.
         """
+
         gt_pixel = self.px_2_cm(gt_pixel)
         es_pixel = self.px_2_cm(es_pixel)
         # Calculate L2 norm between gt_pixel and es_pixel
         l2_norm = math.sqrt((gt_pixel[0] - es_pixel[0]) ** 2 + (gt_pixel[1] - es_pixel[1]) ** 2)
-
-        # Calculate the visual angle
 
         visual_angle = 2 * math.degrees(math.atan((l2_norm / (2 * distance))))
         return visual_angle
