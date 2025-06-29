@@ -27,14 +27,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # DESCRIPTION:
-# This demo shows how to configure the calibration process
+# Version number
 
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
 
 _major_version = '1'
-_minor_version = '2'
-_patch_version = '8'
+_minor_version = '3'
+_patch_version = '0'
 
 __version__ = f'{_major_version}.{_minor_version}.{_patch_version}'
 

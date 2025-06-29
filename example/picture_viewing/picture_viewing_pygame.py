@@ -34,7 +34,7 @@
 # stream, with which we constantly update the position of a gaze cursor
 
 # Author: Gancheng Zhu
-# Last updated: 10/28/2024 by ZW
+# Last updated: 6/29/2025 by ZW
 
 # Load libraries
 import os
@@ -42,6 +42,7 @@ import time
 import pygame
 from pygame.locals import *
 from pupilio import Pupilio, DefaultConfig
+from pupilio.misc import *
 
 # use the Pygame library for graphics, first init pygame and open a full screen window
 pygame.init()
@@ -53,7 +54,8 @@ config = DefaultConfig()
 
 # Heuristic filter, default look_ahead = 2 (i.e., a noisy spike is determined by
 # 4 flanking samples)
-config.look_ahead = 2
+config.look_ahead = 4
+config.active_eye = 0  # 0--bino, -1 -- left eye only, 1 -- right eye only
 
 # instantiate a tracker object
 pupil_io = Pupilio(config)
@@ -92,7 +94,13 @@ for _img in images:
     while not (got_key or (pygame.time.get_ticks() - t_start)>=max_duration):
         # get the newest gaze position
         left, right, bino = pupil_io.get_current_gaze()
-        status, gx, gy = bino
+        if pupil_io.config.active_eye == ActiveEye.BINO_EYE:
+            status, gx, gy = bino
+        if pupil_io.config.active_eye == ActiveEye.LEFT_EYE:
+            status, gx, gy = left
+        if pupil_io.config.active_eye == ActiveEye.RIGHT_EYE:
+            status, gx, gy = right
+
         gx = int(gx)
         gy = int(gy)
 

@@ -1,0 +1,6 @@
+opencv-python
+pywebview
+pygame
+psychopy
+pupilio
+pyvidplayer2

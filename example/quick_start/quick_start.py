@@ -62,7 +62,7 @@ pupil_io.start_sampling()
 msg = 'Recording... Script will terminate in 5 seconds.'
 font = pygame.font.SysFont('Arial', 32)
 _w, _h = font.size(msg)
-txt = font.render(msg, True, (0,0,0))
+txt = font.render(msg, True, (255,255,255))
 win.fill((128,128,128))
 win.blit(txt, ((scn_width - _w)//2, (scn_height - _h)//2))
 pygame.display.flip()

@@ -65,7 +65,7 @@ while True:
         print("Received invalid frame.")
         continue
 
-    # 显示帧
+    # show the captured frames
     cv2.imshow('Video', frame)
 
     # press Q/q to exit the script

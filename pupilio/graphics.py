@@ -27,7 +27,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # DESCRIPTION:
-# This demo shows how to configure the calibration process
+# Calibration graphics for psychopy applications
 
 # !/usr/bin/python
 # Author: GC Zhu
@@ -181,9 +181,11 @@ class CalibrationUI(object):
         # a beep that goes with the calibration target
         self._sound = sound.Sound(self.config.cali_target_beep)
         # calibration instructions
-        self._cali_ins_sound = sound.Sound(self.config.calibration_instruction_sound_path)
+        self._cali_ins_sound = sound.Sound(
+            os.path.join(self._current_dir, "asset", "calibration_instruction.wav"))
         # head position adjustment instructions
-        self._just_pos_sound = sound.Sound(self.config.calibration_adjust_position_sound_path)
+        self._just_pos_sound = sound.Sound(
+            os.path.join(self._current_dir, "asset", "adjust_position.wav"))
         # play sound times
         self._just_pos_sound_once = False
 
@@ -424,8 +426,11 @@ class CalibrationUI(object):
             _left_samples = self._validation_left_sample_store[idx]  # left-eye samples collected at idx
             _right_samples = self._validation_right_sample_store[idx]  # left-eye samples collected at idx
 
-            # validate a positoin, if less than 5 samples were collected for each eye
-            if len(_left_samples) <= 5 or len(_right_samples) <= 5:
+            _tracking_left = self._pupil_io.config.active_eye in [-1, 'left', 0, 'bino']
+            _tracking_right = self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']
+
+            if (len(_left_samples) <= 5 and _tracking_left) or (len(_right_samples) <= 5 and _tracking_right):
+                # validate a positoin, if less than 5 samples were collected for each eye
                 # get ready to collect more samples
                 self._validation_left_sample_store[idx] = []
                 self._validation_right_sample_store[idx] = []
@@ -442,7 +447,7 @@ class CalibrationUI(object):
                 # ground truth position in pygame coordinates
                 _ground_truth_point = self._to_pygame_coords(self._validation_points[idx])
 
-                if self._pupil_io.config.active_eye in [-1, 'left', 0, 'bino']:
+                if _tracking_left:
                     _left_res = self._calculator.calculate_error_by_sliding_window(
                         gt_point=_ground_truth_point,
                         es_points=_left_samples,
@@ -457,7 +462,7 @@ class CalibrationUI(object):
                         self._validation_right_sample_store[idx] = []
                         self._calibration_drawing_list.append(idx)
 
-                if self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']:
+                if _tracking_right:
                     _right_res = self._calculator.calculate_error_by_sliding_window(
                         gt_point=_ground_truth_point,
                         es_points=_right_samples,

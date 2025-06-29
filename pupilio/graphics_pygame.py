@@ -27,7 +27,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # DESCRIPTION:
-# This demo shows how to configure the calibration process
+# Calibration graphics for pygame applications
 
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
@@ -115,14 +115,14 @@ class CalibrationUI(object):
         # self._calibration_instruction_sound_path = os.path.join(self._current_dir, "asset",
         #                                                         "calibration_instruction.wav")
 
-        # self._adjust_position_sound_path = os.path.join(self._current_dir, "asset", "adjust_position.wav")
+        self._adjust_position_sound_path = os.path.join(self._current_dir, "asset", "adjust_position.wav")
 
         # load audio files
         pygame.mixer.init()
         self._sound = pygame.mixer.Sound(self._beep_sound_path)
         self._cali_ins_sound = pygame.mixer.Sound(self.config.calibration_instruction_sound_path)
 
-        self._just_pos_sound = pygame.mixer.Sound(self.config.calibration_adjust_position_sound_path)
+        self._just_pos_sound = pygame.mixer.Sound(self._adjust_position_sound_path)
 
         self._just_pos_sound_once = False
 
@@ -397,7 +397,10 @@ class CalibrationUI(object):
             _left_samples = self._validation_left_sample_store[idx]  # n * 2
             _right_samples = self._validation_right_sample_store[idx]  # n * 2
 
-            if len(_left_samples) <= 5 or len(_right_samples) <= 5:  # 小于五个样本点，说明该点需要重新校准
+            _tracking_left = self._pupil_io.config.active_eye in [-1, 'left', 0, 'bino']
+            _tracking_right = self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']
+
+            if (len(_left_samples) <= 5 and _tracking_left) or (len(_right_samples) <= 5 and _tracking_right):  # 小于五个样本点，说明该点需要重新校准
                 # less than ten samples collected
                 self._validation_left_sample_store[idx] = []
                 self._validation_left_eye_distance_store[idx] = []
@@ -411,8 +414,7 @@ class CalibrationUI(object):
                 _right_eye_distances = self._validation_right_eye_distance_store[idx]  # n * 1
                 _ground_truth_point = self._validation_points[idx]
 
-
-                if self._pupil_io.config.active_eye in [-1, 'left', 0, 'bino']:
+                if _tracking_left:
                     _left_res = self._calculator.calculate_error_by_sliding_window(
                         gt_point=_ground_truth_point,
                         es_points=_left_samples,
@@ -428,7 +430,7 @@ class CalibrationUI(object):
                         self._validation_right_sample_store[idx] = []
                         self._calibration_drawing_list.append(idx)
 
-                if self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']:
+                if _tracking_right:
                     _right_res = self._calculator.calculate_error_by_sliding_window(
                         gt_point=_ground_truth_point,
                         es_points=_right_samples,
@@ -498,8 +500,7 @@ class CalibrationUI(object):
 
                         if _res:
                             self._draw_error_line(_ground_truth_point, _res["min_error_es_point"], self._CRIMSON)
-                            self._draw_error_text(_res["min_error"], _ground_truth_point,
-                                                  is_left=True)
+                            self._draw_error_text(_res["min_error"], _ground_truth_point, is_left=True)
 
                     if self._pupil_io.config.active_eye in [1, 'right', 0, 'bino']:
                         _res = self._calculator.calculate_error_by_sliding_window(
@@ -510,8 +511,7 @@ class CalibrationUI(object):
 
                         if _res:
                             self._draw_error_line(_ground_truth_point, _res["min_error_es_point"], self._CRIMSON)
-                            self._draw_error_text(_res["min_error"], _ground_truth_point,
-                                                  is_left=False)
+                            self._draw_error_text(_res["min_error"], _ground_truth_point, is_left=False)
 
                     self._draw_legend()
                     self._draw_recali_and_continue_tips()

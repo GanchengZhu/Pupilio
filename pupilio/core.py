@@ -27,7 +27,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # DESCRIPTION:
-# This demo shows how to configure the calibration process
+# The core library
 
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com

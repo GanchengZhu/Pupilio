@@ -37,8 +37,6 @@ import json
 from pupilio import Pupilio
 from pygame import FULLSCREEN, HWSURFACE, KEYDOWN
 from pyvidplayer2 import Video
-import tkinter as tk
-
 
 # set SDL_VIDEODRIVER to windib
 # os.environ['SDL_VIDEODRIVER'] = 'windib'

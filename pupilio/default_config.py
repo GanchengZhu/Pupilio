@@ -28,7 +28,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # DESCRIPTION:
-# This demo shows how to configure the calibration process
+# Default configuration file
 
 # Author: GC Zhu
 # Email: zhugc2016@gmail.com
@@ -107,18 +107,12 @@ class DefaultConfig:
         # Font settings
         # self.font_name = "Microsoft YaHei UI Light"  # Font used for displaying text
 
-        # For handsfree
         # Calibration resource file paths
         # calibration instruction wav file
         self.calibration_instruction_sound_path = os.path.join(
             self._current_dir,
             "asset",
             "calibration_instruction.wav")  # Path to the calibration instruction wav file
-
-        self.calibration_adjust_position_sound_path = os.path.join(
-            self._current_dir,
-            "asset",
-            "calibration_instruction.wav")
 
         # Sound file for target beep during calibration
         self.cali_target_beep = os.path.join(

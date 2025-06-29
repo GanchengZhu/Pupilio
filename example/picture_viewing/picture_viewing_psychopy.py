@@ -34,12 +34,13 @@
 # stream, with which we constantly update the position of a gaze cursor
 
 # Author: Gancheng Zhu
-# Last updated: 10/28/2024 by ZW
+# Last updated: 6/29/2025 by ZW
 
 # Load libraries
 import os
 from psychopy import visual, core, event
 from pupilio import Pupilio, DefaultConfig
+from pupilio.misc import ActiveEye
 
 # use the Psychopy library for graphics, first open a full screen window
 scn_width, scn_height = (1920, 1080)
@@ -50,7 +51,8 @@ config = DefaultConfig()
 
 # Heuristic filter, default look_ahead = 2 (i.e., a noisy spike is determined by
 # 4 flanking samples)
-config.look_ahead = 2
+config.look_ahead = 3
+config.active_eye = 'left'
 
 # instantiate a tracker object
 pupil_io = Pupilio(config)
@@ -88,7 +90,13 @@ for _img in images:
     while not (got_key or (core.getTime() - t_start)>=max_duration):
         # get the newest gaze position
         left, right, bino = pupil_io.get_current_gaze()
-        status, gx, gy = bino
+        if pupil_io.config.active_eye == ActiveEye.BINO_EYE:
+            status, gx, gy = bino
+        if pupil_io.config.active_eye == ActiveEye.LEFT_EYE:
+            status, gx, gy = left
+        if pupil_io.config.active_eye == ActiveEye.RIGHT_EYE:
+            status, gx, gy = right
+
         # convert to psychopy coordinates, screen center = (0,0)
         gx = gx -960
         gy = 540 - gy

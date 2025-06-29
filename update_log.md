@@ -1,4 +1,9 @@
 # Pupilio SDK Update Log
+## Version 1.3.0 (Build 1) - 2025-06-29
+
+- Updated the DLL to better support single/bino eye-tracking.
+- Update the calibration graphics (Pygame and Psychopy) to support single/bino eye gaze tracking.
+- Output the estimated optical axes before calibration.
 
 ## Version 1.2.8 (Build 1) - 2025-06-23
 

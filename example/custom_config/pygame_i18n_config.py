@@ -44,11 +44,11 @@ config.face_previewing = 1
 
 config.instruction_language()
 config.instruction_language(lang='en-US')
-config.instruction_language(lang='fr-FR')
-config.instruction_language(lang='zh-HK')
-config.instruction_language(lang='es-ES')
-config.instruction_language(lang='jp-JP')
-config.instruction_language(lang='ko-KR')
+# config.instruction_language(lang='fr-FR')
+# config.instruction_language(lang='zh-HK')
+# config.instruction_language(lang='es-ES')
+# config.instruction_language(lang='jp-JP')
+# config.instruction_language(lang='ko-KR')
 
 # initialize PyGame
 pygame.init()
