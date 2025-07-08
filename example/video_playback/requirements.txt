@@ -1,4 +1,0 @@
-opencv-python
-pywebview
-pygame
-pupilio
