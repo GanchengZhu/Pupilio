@@ -1,15 +1,16 @@
 <div align="center">
   <b>Python SDK for Pupil.IO eye tracker</b><br/><br/>
 </div>
+
 **pupilio** is a lightweight Python SDK for the Pupil.IO eye-trackers developed by Hangzhou Shenning Technology Co., Ltd. It offers a user-friendly interface that covers core eye-tracking functions like data recording, calibration,  validation, and real-time access to gaze data. <br/><br/>
 Pupilio seamlessly integrates with popular platforms such as PsychoPy and PyGame, it enables quick development of eye-tracking studies.
 
 ## Features
 
-- **High-performance control**: Manage the Pupil.IO Eye Tracker with high sampling rates and precise eye movement and pupil data.
-- **Flexible Integration**: Supports integration with popular platforms like PsychoPy and PyGame.
-- **User-friendly Interface**: Intuitive controls for calibration, validation, and data recording.
-
+- **Precision Tracking**: Capture high-frequency eye movement and pupil dynamics with lab-grade accuracy.
+- **Seamless Compatibility**: Native integration with PsychoPy, PyGame, and other Python experimental platforms.
+- **Intuitive Workflow**: Simplified calibration, validation, and recording with minimal setup.
+ 
 ## What's Pupil.IO?
 
 <div align="center">
@@ -18,7 +19,7 @@ Pupilio seamlessly integrates with popular platforms such as PsychoPy and PyGame
   </a>
 </div>
 
-[Pupil.IO](https://www.deep-gaze.com/) is a high-performance, high-speed, and high-precision eye-tracking system designed by [Hangzhou Shenning Technology Co., Ltd](https://www.deep-gaze.com/). It offers high sampling rates and precise eye movement data, making it a valuable tool for scientific and clinical applications.
+[Pupil.IO](https://www.deep-gaze.com/) is a high-speed, high-precision eye-tracking system featuring an all-in-one (AIO) plug-and-play design that is ideal for both scientific research and clinical applications. With minimal setup (just power on and start tracking), it delivers lab-grade accuracy in a compact, user-friendly form factor.
 
 ### Specifications of Eye Tracker
 
