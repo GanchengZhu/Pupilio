@@ -1,9 +1,4 @@
 <div align="center">
-  <a href="https://github.com/GanchengZhu/Pupilio">
-    <img width="160" height="160" src="https://raw.githubusercontent.com/GanchengZhu/Pupilio/master/docs/_static/images/intro/pupilio.png">
-  </a>
-
-
   <b>A pythonic library for Pupil.IO eye tracker</b><br/>
   <i>High-performance control, Flexible Integration, User-friendly Interface</i><br/>
 </div>
