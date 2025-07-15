@@ -1,6 +1,6 @@
-<div align="center">
+<div align="left">
 
-# Python SDK for Pupil.IO eye trackers
+# Pupil.IO Python SDK 
 
 </div>
 
@@ -10,9 +10,9 @@
 
 ## The Pupil.IO eye-tracker
 
-<div align="center">
-  <a href="https://raw.githubusercontent.com/GanchengZhu/Pupilio/refs/heads/master/docs/_static/images/intro/about/banner.png">
-    <img width="390" height="351" src="https://raw.githubusercontent.com/GanchengZhu/Pupilio/refs/heads/master/docs/_static/images/intro/about/banner.png">
+<div align="left">
+  <a href="https://raw.githubusercontent.com/GanchengZhu/Pupilio/refs/heads/master/docs/_static/images/intro/about/pupilio.PNG">
+    <img width="390" height="351" src="https://raw.githubusercontent.com/GanchengZhu/Pupilio/refs/heads/master/docs/_static/images/intro/about/pupilio.PNG">
   </a>
 </div>
 
