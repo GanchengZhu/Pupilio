@@ -1,17 +1,14 @@
 <div align="center">
-  <b>Python SDK for Pupil.IO eye tracker</b><br/><br/>
+
+# Python SDK for Pupil.IO eye trackers
+
 </div>
 
-**pupilio** is a lightweight Python SDK for the Pupil.IO eye-trackers developed by Hangzhou Shenning Technology Co., Ltd. It offers a user-friendly interface that covers core eye-tracking functions like data recording, calibration,  validation, and real-time access to gaze data. <br/><br/>
-Pupilio seamlessly integrates with popular platforms such as PsychoPy and PyGame, it enables quick development of eye-tracking studies.
+## What is "pupilio"?
 
-## Features
+**pupilio** is a lightweight Python SDK for the Pupil.IO eye-trackers developed by Hangzhou Shenning Technology Co., Ltd. It offers a user-friendly interface that covers core eye-tracking functions like data recording, calibration,  validation, and real-time access to gaze data. **"pupilio"** seamlessly integrates with popular platforms such as PsychoPy and PyGame, it enables quick development of eye-tracking studies.
 
-- **Precision Tracking**: Capture high-frequency eye movement and pupil dynamics with lab-grade accuracy.
-- **Seamless Compatibility**: Native integration with PsychoPy, PyGame, and other Python experimental platforms.
-- **Intuitive Workflow**: Simplified calibration, validation, and recording with minimal setup.
- 
-## What's Pupil.IO?
+## The Pupil.IO eye-tracker
 
 <div align="center">
   <a href="https://raw.githubusercontent.com/GanchengZhu/Pupilio/refs/heads/master/docs/_static/images/intro/about/banner.png">
@@ -21,14 +18,19 @@ Pupilio seamlessly integrates with popular platforms such as PsychoPy and PyGame
 
 [Pupil.IO](https://www.deep-gaze.com/) is a high-speed, high-precision eye-tracking system featuring an all-in-one (AIO) plug-and-play design that is ideal for both scientific research and clinical applications. With minimal setup (just power on and start tracking), it delivers lab-grade accuracy in a compact, user-friendly form factor.
 
-### Specifications of Eye Tracker
+### Features
+- **Precision Tracking**: Capture high-frequency eye movement and pupil dynamics with lab-grade accuracy.
+- **Seamless Compatibility**: Native integration with PsychoPy, PyGame, and other Python experimental platforms.
+- **Intuitive Workflow**: Simplified calibration, validation, and recording with minimal setup.
+
+### Specifications
 
 | Attribute                | Specification                                 |
 |--------------------------|-----------------------------------------------|
 | Sample Rate              | 200 Hz        |
-| Accuracy                 | 0.5°                                          |
+| Accuracy                 | 0.5-1°                                          |
 | Precision                | 0.03°                                         |
-| Blink/Occlusion Recovery | 5 ms @ 200 Hz, 2.5 ms @ 400 Hz                |
+| Blink/Occlusion Recovery | 5 ms @ 200 Hz                |
 | Head Box                 | 40 cm x 40 cm @ 70 cm                         |
 | Operation Range          | 50 - 90 cm                                    |
 | Gaze Signal Delay        | < 25 ms                                       |
@@ -36,7 +38,7 @@ Pupilio seamlessly integrates with popular platforms such as PsychoPy and PyGame
 | Dimension                | 32 cm x 45 cm x 20 cm                         |
 | Weight                   | 5 kg [Eye-tracker + Display + Compute Module] |
 | Operating System         | Windows 11                                    |
-| SDK                      | C/C++/Python                                  |
+| SDK                      | C/C++/Python/Matlab                           |
 
 ## Installation
 
